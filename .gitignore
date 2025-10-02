@@ -1,5 +1,11 @@
 TEST/in.in
 TEST/out.out
+in.txt
+
 **/test
 **/exec
 .vscode
+
+# codes
+main.cpp
+std.cpp
