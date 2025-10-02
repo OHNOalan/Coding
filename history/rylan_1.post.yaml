@@ -1,0 +1,33 @@
+POST /v1/category/podcast/list-by-tab HTTP/2
+host: api.xiaoyuzhoufm.com
+os: android
+os-version: 29
+manufacturer: Xiaomi
+model: MI 8
+resolution: 1080x2115
+market: xiaomi
+applicationid: app.podcast.cosmos
+app-version: 2.85.0
+app-buildno: 1221
+x-jike-device-id: 6e953171-04c0-4755-87e1-ee8c02ef1fa0
+webviewversion: 83.0.4103.101
+app-permissions: 100100
+abtest-info: {}
+wificonnected: true
+timezone: Asia/Shanghai
+
+x-jike-access-token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.
+eyJkYXRhIjoiSEhwR1JLVGZvWHBPa21tN0Nocm1NeENmeDNlQzUrdlwvV1ptQ2kyeG9tYzhvS010NGZcL2owNDZFZms5cUtFMWRodnZqSkJMTHEzbEROemU0MGdGT0tZdTNVU0tDWjJYb1JPT09BR1lCSmpDOGt6NUduZ3R2NlJpRkpWbkwrSGdTa2RJdUJwdkVHODU4alIxR21ZRUlKQkY4dEUxYnJsS0RXYm1SVVFCTjNNRForT0ZCRDVMOHVJWjV6VVQxR0pmZHlYck5ReWFES1ptVE1GVVRWaEt4cVA1MWl1ZSt4Q053Tk81VGR2VkIwMGZ4XC9MckV4WU51YVlrQVRRTmRqQlFCNTlyeUtUYlprQXd2N2RtTGFTY2pRdXRNd3Iwb2ZOQzgxVDlURjVhZWJvTTFBYjFRMnFQTllPNVJ4K0hlT2dQdzJoVGRZQWRSMGpZSjY4WTd5WFFibitGZDJ4d1RFT0Rvc2ZXQkNXb2ZzTHpyOTB6YjNaaFMzV3NCa1FDakN1cmlyOGN3M1FlMUtBXC9kTlwvZlJZejNVUjRRMlRxRUtISHZ6dFdmbG51WTFvZm04PSIsInYiOjMsIml2IjoiVFVVTmxuZytxaTh0MWpsbG1OeWJJdz09IiwiaWF0IjoxNzQ4MzU4NzYzLjA5MX0.
+KxrsGU5A6kFv1oEkqSqBb5jilKhzrmUGXAARSVG2mBE
+x-jike-refresh-token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.
+eyJkYXRhIjoiU3I4MGFhUkdYU0dlSDc2V1JjZE5XVHRPU0trdE13QU9UMVVUQ0VMa1B4SHRYdVZ1bHpWajJoVTJOZVRyZUdZZ3ArXC9UaUt2TG16SDlrUzZ3bWYyZ2MzaUhiWVN4aDloMDZ2OU5TZmJ6eGd4cHAzTmY3QUxlamtIa1M0MlwvZzF2d0VXUFdhc25nTjB3UjI4aUJBRnZWSDgxK1RPXC9sTERBQmM3b1ZrcXZUUTdvQ3F6MHpwVlIrSjRocWJvRXlxZm9leU9MRDFWNUs1RWhyeVBFN0VEWFlMMDg2Q0ZTMU4zXC9ibEljdFo5eWhlSUlhT213eXU0MGFjbkNxdjRnMXowbjgiLCJ2IjozLCJpdiI6IlA3ZzJMdkVjemVmdDhSb05xNTFGcFE9PSIsImlhdCI6MTc0ODM1ODc2My4wOTF9.
+nzaq1iayM80Z8bpit5aeqRqRCsEgR649kNPZtngiMuA
+
+content-type: application/json;charset=utf-8
+content-length: 76
+accept-encoding: gzip
+user-agent: okhttp/4.12.0
+x-jike-device-properties: {"uuid":"06a9a51d-fa05-46e5-a1ea-10b39db929ca","android_id":"502f1a590635b94c","oaid":"0c2f9397a1723cc5","vaid":"390bd08651bb5ec9","aaid":"9873f310-dce7-4b89-a465-ff872b11df1c"}
+sentry-trace: 00000000000000000000000000000000-0000000000000000-0
+
+{"categoryId":"63c76a8924b1622727bd321c","tab":"ALL","omitSubscribed":false}

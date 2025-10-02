@@ -1,0 +1,302 @@
+tot_cnt: 300
+Company
+Radix Trading
+Arrowstreet Capital
+Vatic Investments
+Five Rings
+Jump Trading
+SIG
+Optiver
+Hudson River Trading
+D.E. Shaw
+The Voleon Group
+Tower Research Capital
+Citadel
+Jane Street
+Citadel Securities
+Voloridge Investment Managment
+Quadrature Capital
+Virtu Financial
+Two Sigma
+Schonfeld
+Akuna Capital
+Amazon
+IMC Trading
+Point72
+DRW
+QuantCo
+Aptos Labs
+PDT Partners
+Bridgewater Associates
+Netflix
+Monad Labs
+Verition Fund Managment
+Pimco
+Balyasny Asset Management
+Belvedere Trading
+IBM
+Millennium Management
+Goldman Sachs
+Deutsche Bank
+JPMorgan Chase
+Alchemy
+BlackEdge Capital
+Marshall Wace
+Plaid
+Retool
+Tradeweb
+Anyscale
+Nvidia
+Chicago Trading Company
+Flow Traders
+Seven Eight Capital
+Weiss Asset Management
+Google
+Capital One
+OpenSea
+BCG
+Kensho
+X - The Moonshot Factory
+Snap
+Asana
+G-Research
+Nok Nok Labs
+Nuro
+Qube Research & Technologies
+Cruise
+Lucid Motors
+Niantic
+Quantcast
+Rippling
+Wells Fargo
+Wing
+Newfront
+Bliss Point Media
+Barclays
+Observe
+Shield AI
+Uber
+Alex Solutions
+Apple
+Viasat
+Facebook
+Expensify
+Anchorage Digital
+Cloudera
+Etsy
+Faire
+Intel
+LinkedIn
+Moveworks
+Notion
+Plus Ai
+Quora
+Ramp
+Verkada
+Worldquant
+Boeing
+Cohere.ai
+Headway
+Roblox
+Gusto
+AngelList
+Blueshift
+Dfinity
+Pinterest
+Squarepoint Capital
+Watershed
+AQR
+Discord
+Gilead Sciences
+Samsung Research America
+Wolverine Trading
+Workday
+78 Capital
+Embark Trucks
+GTS
+QLS Advisors
+Systematic
+Intuit
+Amazon (APP)
+Atlassian
+Ribbon Home
+Tanium
+Twitch
+AWS
+Yugabyte
+Blackstone
+Gecko Robotics
+Waymo
+Addepar
+AMD
+Anduril
+AppLovin
+Benchling
+Bill.com
+Braze
+Bytedance
+Cadence
+Celonis
+Convoy
+Cutler Group
+Figma
+Hopper
+Indeed
+Insitro
+Lyft
+MarketAxess
+McKinsey
+Motional
+OpenAI
+OpenGov
+Paravision
+Persona Identities
+Planet
+Radar
+Reddit
+Rubrik
+Salesforce
+Scale AI
+SeatGeek
+ServiceNow
+Solana Labs
+Splunk
+Stripe
+Talroo
+Taxbit
+Tenstorrent
+Tiktok
+Transcend
+GitHub
+Fanatics Inc
+Booz Allen Hamilton
+Anaplan
+Better.com
+BlackRock
+Coinbase
+Coursera
+Audible
+Chime
+Riot Games
+Zillow
+Robinhood
+Adobe
+Amplitude
+Appen
+Databricks
+Infinera
+Lob
+Okta
+Skydio
+Spotify
+Stottler Henke Associates
+Oscar Health
+Air Force Research Laboratory
+Arcesium
+Equinix
+Glean
+Level
+Microsoft
+Mysten Labs
+Palantir
+Reverie Labs
+Statsig
+Trexquant
+Uniswap Labs
+Valkyrie Trading
+Whatnot
+Snowflake
+Qualtrics
+Datadog
+MongoDB
+Amazon Robotics
+Ambarella
+Aurora
+Citi
+DoorDash
+Epic Games
+Munich Re
+Rentathon
+Samsung
+Farm Credit
+PathAI
+Schlumberger
+Zoom
+Cockroach Labs
+Tesla
+Affirm
+Autodesk
+Bloomberg
+Bosch
+Factual
+GoDaddy
+SAP
+Slack
+Verily Life Sciences
+BNP Paribas
+Twitter
+Credit Karma
+1Password
+Algorand
+BitGo
+Branch
+Brex
+Cisco Meraki
+Coalition
+Comcast
+Confluent
+CVS Health
+DraftKings
+Freewheel
+GoPuff
+HubSpot
+Illumio
+Impactility
+InnoPeak
+Intuitive
+Intuitive Surgical
+Kasten
+Lacework
+Mercury
+NeoImmuneTech
+One Medical
+Patreon
+PayPal
+Peak6
+Pixar
+Postmates
+Qorvo
+realtor.com
+Ripple
+Snorkel AI
+SoFi
+Sumo Logic
+Upstart
+ZipRecruiter
+SMBC
+American Express
+Codeium
+Dropbox
+Eightfold.ai
+Zoox
+Pure Storage
+BNY Mellon
+Cisco
+Chan Zuckerberg Initiative
+Redfin
+Shopify
+Squarespace
+Tableau
+Lawrence Livermore National Lab
+Baker Hughes
+Sentry
+Instabase
+A10 Networks
+Airbyte
+Amadeus
+Chewy
+Cohesity
+Datavant
+DigitalOcean
+eBay
+Ellington Management Group

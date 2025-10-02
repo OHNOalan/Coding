@@ -1,0 +1,19 @@
+curl -X POST "https://api.xiaoyuzhoufm.com/v1/category/podcast/list-by-tab" \
+-H "host: api.xiaoyuzhoufm.com" \
+-H "os: android" \
+-H "os-version: 29" \
+-H "manufacturer: Xiaomi" \
+-H "model: MI 8" \
+-H "resolution: 1080x2115" \
+-H "market: xiaomi" \
+-H "applicationid: app.podcast.cosmos" \
+-H "app-version: 2.85.0" \
+-H "app-buildno: 1221" \
+-H "x-jike-device-id: 6e953171-04c0-4755-87e1-ee8c02ef1fa0" \
+-H "webviewversion: 83.0.4103.101" \
+-H "app-permissions: 100100" \
+-H "abtest-info: {}" \
+-H "wificonnected: true" \
+-H "timezone: Asia/Shanghai" \
+-H "local-time: 2025-05-27T23:22:06.386+0800" \
+-H "x-jike-access-token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhIjoiSEhwR1JLVGZvWHBPa21tN0Nocm1NeENmeDNlQzUrdlwvV1ptQ2kyeG9tYzhvS010NGZcL2owNDZFZms5cUtFMWRodnZqSkJMTHEzbEROemU0MGdGT0tZdTNVU0tDWjJYb1JPT09BR1lCSmpDOGt6NUduZ3R2NlJpRkpWbkwrSGdTa2RJdUJwdkVHODU4alIxR21ZRUlKQkY4dEUxYnJsS0RXYm1SVVFCTjNNRForT0ZCRDVMOHVJWjV6VVQxR0pmZHlYck5ReWFES1ptVE1GVVRWaEt4cVA1MWl1ZSt4Q053Tk81VGR2VkIwMGZ4XC9MckV4WU51YVlrQVRRTmRqQlFCNTlyeUtUYlprQXd2N2RtTGFTY2pRdXRN"

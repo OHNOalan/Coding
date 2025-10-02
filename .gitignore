@@ -1,0 +1,5 @@
+TEST/in.in
+TEST/out.out
+**/test
+**/exec
+.vscode
