@@ -9,3 +9,9 @@ in.txt
 # codes
 main.cpp
 std.cpp
+
+main
+std
+
+# debugging file
+*.dSYM/
