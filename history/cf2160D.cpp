@@ -31,8 +31,8 @@ void solve() {
     idx = {2 * n};
     for (int i = 2 * n - 1; i >= 1; i--) {
         idx.push_back(i);
-        int ans = query(idx);
-        if (ans != 0) {
+        if (arr[i] == 0) {
+            int ans = query(idx);
             arr[i] = ans;
             idx.pop_back();
         }
