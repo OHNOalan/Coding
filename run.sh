@@ -13,8 +13,9 @@ fi
 clear && \
     g++ -std=c++20 -fsanitize=address,undefined -g $FILE.cpp -o $FILE && \
     if [ -n "$DEBUG" ]; then
-        # 使用lldb替代gdb进行调试（macOS推荐）
-        DEBUG=$IN lldb $FILE
+        lldb $FILE
+    elif [ -n "$INTERACTIVE" ]; then
+        ./$FILE
     else
         ./$FILE < $IN
     fi
