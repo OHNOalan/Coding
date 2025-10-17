@@ -37,6 +37,7 @@ void solve() {
             idx.pop_back();
         }
     }
+    cout << "! ";
     for (int i = 1; i <= 2 * n; i++) cout << arr[i] << " ";
     cout << endl;
 }
