@@ -2,6 +2,8 @@ TEST/in.in
 TEST/out.out
 in.txt
 
+test_results/
+
 **/test
 **/exec
 .vscode
