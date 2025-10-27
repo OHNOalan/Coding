@@ -121,7 +121,6 @@ void solve() {
         bit.update(p[j], -1);
     }
 
-
     for (int x: ans) cout << x << " ";
     cout << '\n';
 }
