@@ -63,7 +63,7 @@ SpacesInConditionalStatement: false
 SpacesInCStyleCastParentheses: false
 SpacesInParentheses: false
 TabWidth: 4
-AllowShortIfStatementsOnASingleLine: false
+AllowShortIfStatementsOnASingleLine: true
 AllowShortLoopsOnASingleLine: true
-AllowShortBlocksOnASingleLine: true
+AllowShortBlocksOnASingleLine: false
 BreakBeforeBraces: Custom
