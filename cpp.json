@@ -12,7 +12,7 @@
 			"using namespace std;",
 			"",
 			"void solve() {",
-			"    $1",
+			"    $0",
 			"}",
 			"",
 			"int main() {",
@@ -701,6 +701,13 @@
 			"    }",
 			"",
 			"} // namespace std"
+		]
+	},
+	"YESNO": {
+		"prefix": "YESNO",
+		"body": [
+			"#define YES cout << \"YES\\n\"",
+			"#define NO cout << \"NO\\n\"",
 		]
 	}
 }
