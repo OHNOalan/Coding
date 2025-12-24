@@ -27,6 +27,37 @@
 		],
 		"description": "INIT"
 	},
+	"INIT_TIME": {
+		"prefix": "INIT_TIME",
+		"body": [
+			"#include <bits/stdc++.h>",
+			"",
+			"using namespace std;",
+			"",
+			"void solve() {",
+			"    ",
+			"}",
+			"",
+			"int main() {",
+			"#ifdef TIMER",
+			"    auto _clock_start = chrono::high_resolution_clock::now();",
+			"#endif",
+			"    ios::sync_with_stdio(0);",
+			"    cin.tie(0);",
+			"",
+			"    int t;",
+			"    cin >> t;",
+			"    while (t--) solve();",
+			"#ifdef TIMER",
+			"    cerr << \"Executed in \"",
+			"         << chrono::duration_cast<chrono::milliseconds>(chrono::high_resolution_clock::now() - _clock_start).count()",
+			"         << \"ms.\" << endl;",
+			"#endif",
+			"}",
+			""
+		],
+		"description": "INIT_TIME"
+	},
 	"DEBUG": {
 		"prefix": "DEBUG",
 		"body": [
@@ -553,7 +584,11 @@
 		"description": "DATA STRUCTURE"
 	},
 	"DS_UF": {
-		"prefix": "UF",
+		"prefix": [
+			"UF",
+			"dsu",
+			"DSU"
+		],
 		"body": [
 			"struct UF {",
 			"    int n;",
@@ -1072,5 +1107,21 @@
 			"#define YES cout << \"YES\\n\"",
 			"#define NO cout << \"NO\\n\"",
 		]
+	},
+	"lg": {
+		"prefix": "lg",
+		"body": [
+			"template<typename _Tp>",
+			"_Tp __lg(_Tp __n)",
+			"{",
+			"    return (sizeof(+__n) * __CHAR_BIT__ - 1)",
+			"           - (sizeof(+__n) == sizeof(long long)",
+			"            ? __builtin_clzll(+__n)",
+			"            : (sizeof(+__n) == sizeof(long)",
+			"             ? __builtin_clzl(+__n)",
+			"             : __builtin_clz(+__n)));",
+			"}"
+		],
+		"description": "lg"
 	}
 }

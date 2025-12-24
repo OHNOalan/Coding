@@ -10,11 +10,11 @@ if [ -f "$2" ]; then
     IN=$2
 fi
 
-g++ -std=c++20 -fsanitize=address,undefined -g $FILE.cpp -o $FILE && \
+g++ -lcurl -std=c++20 -DTIMER -fsanitize=address,undefined -g $FILE.cpp -o $FILE && \
     if [ -n "$DEBUG" ]; then
         lldb $FILE
     elif [ -n "$INTERACTIVE" ]; then
-        ./$FILE
+        time ./$FILE
     else
-        ./$FILE < $IN
+        time ./$FILE < $IN
     fi

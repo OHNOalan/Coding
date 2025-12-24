@@ -5,9 +5,7 @@ struct DSU {
     std::vector<int> f, siz;
 
     DSU() {}
-    DSU(int n) {
-        init(n);
-    }
+    DSU(int n) { init(n); }
 
     void init(int n) {
         f.resize(n + 1);
@@ -22,9 +20,7 @@ struct DSU {
         return x;
     }
 
-    bool same(int x, int y) {
-        return find(x) == find(y);
-    }
+    bool same(int x, int y) { return find(x) == find(y); }
 
     bool merge(int x, int y) {
         x = find(x);
@@ -37,7 +33,5 @@ struct DSU {
         return false;
     }
 
-    int size(int x) {
-        return siz[find(x)];
-    }
+    int size(int x) { return siz[find(x)]; }
 };
