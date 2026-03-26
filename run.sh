@@ -10,7 +10,7 @@ if [ -f "$2" ]; then
     IN=$2
 fi
 
-g++ -lcurl -std=c++20 -DTIMER -fsanitize=address,undefined -g $FILE.cpp -o $FILE && \
+g++ -std=c++26 -DTIMER -fsanitize=address,undefined -g $FILE.cpp -o $FILE && \
     if [ -n "$DEBUG" ]; then
         lldb $FILE
     elif [ -n "$INTERACTIVE" ]; then
