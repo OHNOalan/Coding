@@ -1,19 +1,2 @@
-TEST/in.in
-TEST/out.out
-in.txt
-
-test_results/
-
-**/test
-**/exec
-.vscode
-
-# codes
-main.cpp
-std.cpp
-
-main
-std
-
-# debugging file
-*.dSYM/
+# Created by venv; see https://docs.python.org/3/library/venv.html
+*

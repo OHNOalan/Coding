@@ -32,7 +32,7 @@
 			"    ios::sync_with_stdio(0);",
 			"    cin.tie(0);",
 			"",
-			"    int t;",
+			"    int t = 1;",
 			"    cin >> t;",
 			"    while (t--) solve();",
 			"}",
@@ -610,9 +610,7 @@
 	},
 	"DS_UF": {
 		"prefix": [
-			"UF",
-			"dsu",
-			"DSU"
+			"UF"
 		],
 		"body": [
 			"struct UF {",
@@ -633,6 +631,52 @@
 			"    }",
 			"};",
 		]
+	},
+	"DSU": {
+		"prefix": "DSU",
+		"body": [
+			"struct DSU {",
+			"    vector<int> f, siz;",
+			"",
+			"    DSU() {}",
+			"    DSU(int n) {",
+			"        init(n);",
+			"    }",
+			"",
+			"    void init(int n) {",
+			"        f.resize(n + 1);",
+			"        iota(f.begin(), f.end(), 0);",
+			"        siz.assign(n + 1, 1);",
+			"    }",
+			"",
+			"    int find(int x) {",
+			"        while (x != f[x]) {",
+			"            x = f[x] = f[f[x]];",
+			"        }",
+			"        return x;",
+			"    }",
+			"",
+			"    bool same(int x, int y) {",
+			"        return find(x) == find(y);",
+			"    }",
+			"",
+			"    bool merge(int x, int y) {",
+			"        x = find(x);",
+			"        y = find(y);",
+			"        if (x == y) {",
+			"            return true;",
+			"        }",
+			"        siz[x] += siz[y];",
+			"        f[y] = x;",
+			"        return false;",
+			"    }",
+			"",
+			"    int size(int x) {",
+			"        return siz[find(x)];",
+			"    }",
+			"};"
+		],
+		"description": "DSU"
 	},
 	"DS_TREAP_ROT": {
 		"prefix": "TREAP_ROT",
