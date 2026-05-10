@@ -1,0 +1,6 @@
+# macOS runtime allocations that frequently appear as LSan noise
+leak:libobjc.A.dylib
+leak:libxpc.dylib
+leak:libsystem_malloc.dylib
+leak:dyld
+leak:libc++abi.dylib

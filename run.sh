@@ -17,7 +17,7 @@ fi
 
 COMPILER="clang++"
 CPPFLAGS_STDCXX_H='-I/usr/local/include'
-STD_CPP='-std=c++26'
+STD_CPP='-std=c++26 -pedantic-errors'
 OPTIMIZATION='-O3'
 DEBUG_INFO='-g'
 FRAME_POINTER='-fno-omit-frame-pointer'
@@ -74,7 +74,9 @@ if compile; then
     if [ -z "${PERF:-}" ] && [ -n "${ASAN_SYMBOLIZER_PATH:-}" ]; then
         echo ">>> ASAN_SYMBOLIZER_PATH=${ASAN_SYMBOLIZER_PATH}"
     fi
-    run_bin
+    if [ -n "${RUN:-}" ]; then
+        run_bin
+    fi
 else
     echo "编译失败。"
     exit 1
