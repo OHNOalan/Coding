@@ -5,6 +5,7 @@ set -euo pipefail
 FILE=${1:?用法: $0 <name> [in.txt] [out.txt]}
 IN=${2:-"in.txt"}
 OUT=${3:-"out.txt"}
+ACTUAL_OUT=${ACTUAL_OUT:-"result.txt"}
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 FILENAME="$FILE.cpp"
@@ -17,13 +18,16 @@ fi
 
 COMPILER="clang++"
 CPPFLAGS_STDCXX_H='-I/usr/local/include'
-STD_CPP='-std=c++26 -pedantic-errors'
+STD_CPP='-std=c++26 -Wall -Wextra -Werror -pedantic-errors -Wfatal-errors'
 OPTIMIZATION='-O3'
-DEBUG_INFO='-g'
+PERF_OPT='-DNDEBUG -march=native -fomit-frame-pointer'
+DEBUG_INFO='-g -gsplit-dwarf'
 FRAME_POINTER='-fno-omit-frame-pointer'
 # ASan + UBSan；仅调试构建启用（PERF=1 时关闭）
-SANITIZER='' #'-fsanitize=address,undefined'
+SANITIZER='-fsanitize=address,undefined'
 # SANITIZER=''
+STATIC="time -l"
+
 
 # Homebrew LLVM：让 ASan/UBSan 报告里的栈带 file:line（需编译带 -g）
 if [ -x "/opt/homebrew/opt/llvm/bin/llvm-symbolizer" ]; then
@@ -44,8 +48,8 @@ fi
 
 compile() {
     if [ -n "${PERF:-}" ]; then
-        echo ">>> [性能模式] 编译 ($OPTIMIZATION，无 Sanitizer)..."
-        $COMPILER $CPPFLAGS_STDCXX_H $STD_CPP $FRAME_POINTER $OPTIMIZATION "$FILENAME" -o "$BINARY"
+        echo ">>> [性能模式] 编译 ($OPTIMIZATION, 无 Sanitizer)..."
+        $COMPILER $CPPFLAGS_STDCXX_H $STD_CPP $OPTIMIZATION $PERF_OPT "$FILENAME" -o "$BINARY"
     else
         echo ">>> [调试模式] 编译 ($OPTIMIZATION + ASan/UBSan + $DEBUG_INFO)..."
         $COMPILER $CPPFLAGS_STDCXX_H $STD_CPP $OPTIMIZATION $DEBUG_INFO $FRAME_POINTER $SANITIZER "$FILENAME" -o "$BINARY"
@@ -58,14 +62,28 @@ run_bin() {
         lldb "./$BINARY"
     elif [ -n "${INTERACTIVE:-}" ]; then
         echo ">>> 交互运行..."
-        time "./$BINARY"
+        $STATIC "./$BINARY"
     else
         if [ -f "$IN" ]; then
             echo ">>> 输入: $IN"
-            time "./$BINARY" < "$IN"
+            {
+                $STATIC "./$BINARY" < "$IN" > "$ACTUAL_OUT"
+            } 2> >(tee /dev/stderr | awk '/maximum resident set size/ {printf "峰值内存: %.2f MB\n", $1/1024/1024}')
+
+            echo ">>> 程序输出已保存: $ACTUAL_OUT"
+            if [ -f "$OUT" ]; then
+                echo ">>> 对比期望输出: $OUT"
+                if diff -u --strip-trailing-cr "$OUT" "$ACTUAL_OUT"; then
+                    echo ">>> ✅ 输出一致"
+                else
+                    echo ">>> ❌ 输出不一致"
+                fi
+            else
+                echo ">>> 提示: 期望输出文件 $OUT 不存在，已跳过 diff"
+            fi
         else
             echo ">>> 提示: 无 $IN，直接运行..."
-            time "./$BINARY"
+            $STATIC "./$BINARY"
         fi
     fi
 }
