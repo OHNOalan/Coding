@@ -1,0 +1,37 @@
+#!/bin/bash
+# Refuses to commit compiled binaries or oversized files - the exact class of
+# mistake that kept sneaking into this repo (main2, main.s, out.txt, std3,
+# my_udp_stack...). Checks the staged blob content, not the working tree file.
+#
+# One-off override when a file genuinely belongs:
+#   ALLOW_BINARY=1 git commit ...
+#   ALLOW_BIG=1 git commit ...
+set -euo pipefail
+
+MAX_BYTES=$((5 * 1024 * 1024))
+fail=0
+
+while IFS= read -r -d '' file; do
+    [ -f "$file" ] || continue  # skip deletions/submodules
+
+    mime=$(git cat-file -p ":$file" 2>/dev/null | file --mime-type -b - || true)
+    case "$mime" in
+        application/x-mach-binary|application/x-executable|application/x-sharedlib|application/x-pie-executable|application/x-elf|application/x-object)
+            if [ -z "${ALLOW_BINARY:-}" ]; then
+                echo "pre-commit: refusing to commit binary file: $file ($mime)" >&2
+                fail=1
+            fi
+            ;;
+    esac
+
+    size=$(git cat-file -s ":$file" 2>/dev/null || echo 0)
+    if [ "$size" -gt "$MAX_BYTES" ] && [ -z "${ALLOW_BIG:-}" ]; then
+        echo "pre-commit: refusing to commit oversized file: $file (${size} bytes > ${MAX_BYTES})" >&2
+        fail=1
+    fi
+done < <(git diff --cached --name-only --diff-filter=ACM -z)
+
+if [ "$fail" -ne 0 ]; then
+    echo "pre-commit: aborting. Override with ALLOW_BINARY=1 / ALLOW_BIG=1 if intentional." >&2
+    exit 1
+fi
