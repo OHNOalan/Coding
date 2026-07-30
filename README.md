@@ -6,13 +6,23 @@
 
 - `main.cpp` / `std.cpp` / `in.txt` / `out.txt` —— 每道新题的临时草稿。`std.cpp` 是本地对拍用的
   暴力/正确参考解。四个都已 `git update-index --skip-worktree`,内容随便改,`git status`
-  永远看不见改动。云端只留一份极简占位符,换机器要重新
-  `git update-index --skip-worktree main.cpp std.cpp in.txt out.txt` 一次。
+  永远看不见改动。云端只留一份极简占位符;这个状态是本地的,不会随 clone 同步,换机器
+  跑一次 `./bootstrap.sh` 就会重新设置好(顺带把 pre-commit 钩子也接上,见下文)。
 - `template/` —— 算法模板(DSU、线段树、Fenwick、Treap、Dinic、Modint 等),直接复制进 `main.cpp` 用。
 - `history/` —— 按比赛/题号归档的历史提交(`cf2249A.cpp`、`Bround3D.cpp` 之类)。
 - `comm_test/` —— 双程序交互题(run-twice / communication problem)本地测试工具,见下文。
 - 根目录其余零散 `.cpp`/`.h` —— C++/Linux 系统编程实验(并发原语、MPI 分布式实验、UDP/CIDR
   网络实验、binary patching 笔记等),不是竞赛代码。
+
+## 首次 clone
+
+```
+./bootstrap.sh
+```
+
+设置 `core.hooksPath` 指向 `.githooks/`(pre-commit 会拒绝提交编译产物/超过 5MB 的文件,
+误加的话用 `ALLOW_BINARY=1`/`ALLOW_BIG=1` 覆盖),并重新给 `main.cpp`/`std.cpp`/`in.txt`/
+`out.txt` 打上 `skip-worktree`。
 
 ## 日常刷题:`run.sh`
 
