@@ -4,9 +4,10 @@
 
 ## 目录结构
 
-- `main.cpp` / `in.txt` / `out.txt` —— 每道新题的临时草稿。已 `git update-index --skip-worktree`,
-  内容随便改,`git status` 永远看不见改动。云端只留一份极简占位符,换机器要重新
-  `git update-index --skip-worktree main.cpp in.txt out.txt` 一次。
+- `main.cpp` / `std.cpp` / `in.txt` / `out.txt` —— 每道新题的临时草稿。`std.cpp` 是本地对拍用的
+  暴力/正确参考解。四个都已 `git update-index --skip-worktree`,内容随便改,`git status`
+  永远看不见改动。云端只留一份极简占位符,换机器要重新
+  `git update-index --skip-worktree main.cpp std.cpp in.txt out.txt` 一次。
 - `template/` —— 算法模板(DSU、线段树、Fenwick、Treap、Dinic、Modint 等),直接复制进 `main.cpp` 用。
 - `history/` —— 按比赛/题号归档的历史提交(`cf2249A.cpp`、`Bround3D.cpp` 之类)。
 - `comm_test/` —— 双程序交互题(run-twice / communication problem)本地测试工具,见下文。
