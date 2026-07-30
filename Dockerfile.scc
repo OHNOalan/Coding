@@ -1,0 +1,42 @@
+# 用于编译/跑 scc_parallel.cpp 的 Linux 环境：主要图的是方便装 TBB 和
+# g++，以及 --cpus 可以精确控制核数做可重复的多核基准测试。
+#
+# 关于用它做"伪共享"取证的坦白话（实测验证过，不是猜测）：
+# 在这台机器上（OrbStack, Apple Silicon）实测过：容器里的 perf 直接报
+# "WARNING: perf not found for kernel 7.0.11-orbstack"——
+# linux-tools-generic 装的是某个通用内核版本的 perf 二进制，跟 OrbStack
+# 虚拟机自己的内核 (7.0.11-orbstack) 对不上号，根本起不来，
+# 更别提 `perf stat -e cache-misses` / `perf c2c` 这类依赖硬件 PMU
+# 精确采样的功能了（Docker Desktop / Virtualization Framework 这层虚拟化
+# 普遍不透传 PMU，不是这个仓库特有的限制）。这个容器仍然有用，但用途是：
+#   1. 装 TBB + 一致的 Linux 工具链，方便编译 tbb::task_group 版本
+#   2. --cpus=N 精确限核，做可重复的多线程 scaling 基准
+#   3. perf stat 里不需要硬件计数器的"软件事件"（task-clock、
+#      context-switches、page-faults）在虚拟化环境下是可靠的
+#   4. valgrind --tool=cachegrind 是纯软件模拟器，不需要硬件 PMU，能跑，
+#      但它模拟的是单核缓存行为，不是跨核 cache line 争用，所以它也
+#      不能直接证明"伪共享"，只能看某个函数本身的 cache miss 率
+# 真要用硬件计数器实测伪共享（比如 perf c2c 精确定位到具体是哪条 cache
+# line 被哪几个核心争抢），需要一台裸机 Linux（或者开了 PMU 透传的云
+# Linux 虚拟机），Docker Desktop on Mac 大概率做不到。
+FROM ubuntu:22.04
+
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    cmake \
+    libtbb-dev \
+    linux-tools-common \
+    linux-tools-generic \
+    valgrind \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /work
+COPY scc_parallel.cpp .
+
+# 不带 TBB:
+#   g++ -std=c++17 -O2 -pthread -o scc_parallel scc_parallel.cpp
+# 带 TBB:
+#   g++ -std=c++17 -O2 -pthread -DUSE_TBB -o scc_parallel scc_parallel.cpp -ltbb
+RUN g++ -std=c++17 -O2 -pthread -DUSE_TBB -o scc_parallel scc_parallel.cpp -ltbb
+
+CMD ["./scc_parallel"]

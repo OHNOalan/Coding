@@ -8,3 +8,35 @@ TEST/*
 
 main*
 std*
+
+# GCC/Clang compiler-internals dump artifacts (-fdump-tree-all, GIMPLE/RTL passes, etc.)
+a-*.cpp.*
+
+# LLVM PGO instrumentation output
+*.profraw
+*.profdata
+
+# Clang C++20 module cache
+gcm.cache/
+
+# Generated/disassembled asm dumps (run.sh/objdump scratch output)
+*.s
+
+# Machine-specific clangd config (hardcodes a local LLVM install path)
+.clangd
+
+# Compiled scratch binaries / shared objects from ad-hoc experiments
+*.so
+*.dylib
+.tmp_main_*
+/gen
+/o3_unroll4
+/pgo_benchmark
+/pgo_optimized
+/pgo_unroll16
+/scc_compare
+/scc_parallel
+/test_app
+/vuln
+/patch
+/old

@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Binary Patching & Code Caving 笔记</title>
+<style>
+  :root {
+    --bg: #0d1117; --bg2: #161b22; --bg3: #21262d;
+    --border: #30363d; --text: #c9d1d9; --muted: #8b949e;
+    --blue: #58a6ff; --green: #3fb950; --yellow: #d29922;
+    --red: #f85149; --purple: #bc8cff; --orange: #e3b341;
+    --cyan: #39d353;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, "Segoe UI", sans-serif; font-size: 15px; line-height: 1.7; }
+  a { color: var(--blue); text-decoration: none; }
+
+  /* Layout */
+  .sidebar { position: fixed; top: 0; left: 0; width: 240px; height: 100vh; background: var(--bg2); border-right: 1px solid var(--border); overflow-y: auto; padding: 20px 0; z-index: 100; }
+  .sidebar h2 { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); padding: 8px 20px 4px; }
+  .sidebar a { display: block; padding: 6px 20px; color: var(--text); font-size: 13px; border-left: 2px solid transparent; transition: all 0.15s; }
+  .sidebar a:hover, .sidebar a.active { background: var(--bg3); border-left-color: var(--blue); color: var(--blue); }
+  .content { margin-left: 240px; max-width: 900px; padding: 40px 48px; }
+
+  /* Typography */
+  h1 { font-size: 28px; font-weight: 700; color: #fff; margin-bottom: 8px; }
+  h2 { font-size: 20px; font-weight: 600; color: #fff; margin: 48px 0 16px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+  h3 { font-size: 16px; font-weight: 600; color: var(--blue); margin: 28px 0 10px; }
+  h4 { font-size: 14px; font-weight: 600; color: var(--orange); margin: 20px 0 8px; }
+  p { margin-bottom: 12px; color: var(--text); }
+  .subtitle { color: var(--muted); font-size: 14px; margin-bottom: 32px; }
+
+  /* Code */
+  code { font-family: "JetBrains Mono", "Fira Code", "SF Mono", monospace; font-size: 13px; background: var(--bg3); color: var(--orange); padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border); }
+  pre { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 20px; margin: 16px 0; overflow-x: auto; position: relative; }
+  pre code { background: none; border: none; color: var(--text); padding: 0; font-size: 13px; line-height: 1.6; }
+  .comment { color: #6e7681; }
+  .kw { color: var(--purple); }
+  .str { color: var(--green); }
+  .num { color: var(--cyan); }
+  .fn { color: var(--blue); }
+  .label { color: var(--orange); font-weight: 600; }
+  .reg { color: #79c0ff; }
+  .inst { color: var(--purple); }
+
+  /* Tags */
+  .tag { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-right: 6px; }
+  .tag-macos { background: #1c2d40; color: var(--blue); border: 1px solid #2d4a6a; }
+  .tag-linux { background: #1a2d1a; color: var(--green); border: 1px solid #2a4a2a; }
+  .tag-arm64 { background: #2d1c40; color: var(--purple); border: 1px solid #4a2d6a; }
+  .tag-x86 { background: #2d2a1a; color: var(--yellow); border: 1px solid #4a401a; }
+  .tag-warn { background: #2d1c1c; color: var(--red); border: 1px solid #4a2a2a; }
+  .tag-tip { background: #1c2d1c; color: var(--green); border: 1px solid #2a4a2a; }
+
+  /* Callout boxes */
+  .callout { border-radius: 8px; padding: 16px 20px; margin: 16px 0; border-left: 4px solid; }
+  .callout-info { background: #0d2044; border-color: var(--blue); }
+  .callout-warn { background: #2d1500; border-color: var(--yellow); }
+  .callout-danger { background: #2d0d0d; border-color: var(--red); }
+  .callout-tip { background: #0d2d0d; border-color: var(--green); }
+  .callout strong { display: block; margin-bottom: 6px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .callout-info strong { color: var(--blue); }
+  .callout-warn strong { color: var(--yellow); }
+  .callout-danger strong { color: var(--red); }
+  .callout-tip strong { color: var(--green); }
+
+  /* Tables */
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 13px; }
+  th { background: var(--bg3); color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; padding: 8px 12px; text-align: left; border-bottom: 2px solid var(--border); }
+  td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--bg3); }
+
+  /* Memory map */
+  .memmap { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin: 16px 0; font-family: monospace; font-size: 13px; }
+  .memmap-row { display: flex; align-items: center; padding: 8px 16px; border-bottom: 1px solid var(--border); gap: 16px; }
+  .memmap-row:last-child { border-bottom: none; }
+  .memmap-addr { color: var(--muted); width: 120px; flex-shrink: 0; }
+  .memmap-label { font-weight: 600; flex: 1; }
+  .memmap-size { color: var(--muted); font-size: 12px; width: 80px; text-align: right; flex-shrink: 0; }
+  .memmap-row.pagezero { background: #1a1a1a; color: #444; }
+  .memmap-row.text-seg { background: #0d1a2d; }
+  .memmap-row.text-sect { background: #0a1520; padding-left: 32px; }
+  .memmap-row.text-sect .memmap-label { color: var(--green); }
+  .memmap-row.unwind { background: #0a1520; padding-left: 32px; }
+  .memmap-row.unwind .memmap-label { color: var(--yellow); }
+  .memmap-row.cave { background: #0a200a; padding-left: 32px; }
+  .memmap-row.cave .memmap-label { color: var(--cyan); }
+  .memmap-row.linkedit { background: #1a1020; }
+  .memmap-row.linkedit .memmap-label { color: var(--purple); }
+
+  /* Flow diagram */
+  .flow { display: flex; align-items: flex-start; gap: 0; margin: 20px 0; flex-wrap: wrap; }
+  .flow-step { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 14px 18px; min-width: 140px; text-align: center; position: relative; }
+  .flow-step .step-num { font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+  .flow-step .step-tool { font-size: 14px; font-weight: 700; color: var(--blue); margin-bottom: 2px; }
+  .flow-step .step-desc { font-size: 11px; color: var(--muted); }
+  .flow-arrow { display: flex; align-items: center; padding: 0 8px; color: var(--muted); font-size: 20px; margin-top: 20px; }
+
+  /* Diff */
+  .diff-old { background: #2d1515; color: #f85149; border-left: 3px solid var(--red); padding: 2px 8px; font-family: monospace; font-size: 13px; }
+  .diff-new { background: #152d15; color: #3fb950; border-left: 3px solid var(--green); padding: 2px 8px; font-family: monospace; font-size: 13px; }
+  .diff-ctx { color: var(--muted); padding: 2px 8px; font-family: monospace; font-size: 13px; }
+
+  /* TOC marker */
+  .section-anchor { scroll-margin-top: 20px; }
+
+  hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
+</style>
+</head>
+<body>
+
+<nav class="sidebar">
+  <h2>Binary Patching</h2>
+  <a href="#s1">1. 二进制文件结构</a>
+  <a href="#s2">2. 为什么有 Cave</a>
+  <a href="#s3">3. udf / unknown 是啥</a>
+  <a href="#s4">4. Code Caving 原理</a>
+  <a href="#s5">5. macOS 工具链</a>
+  <a href="#s6">6. Linux x86 工具链</a>
+  <a href="#s7">7. 完整流水线对比</a>
+  <a href="#s8">8. 避坑备忘</a>
+</nav>
+
+<div class="content">
+  <h1>Binary Patching & Code Caving</h1>
+  <p class="subtitle">
+    <span class="tag tag-macos">macOS ARM64</span>
+    <span class="tag tag-linux">Linux x86-64</span>
+    完整工具链与工作流水线笔记
+  </p>
+
+  <!-- ─────────────────────────────────────────── 1 -->
+  <h2 id="s1" class="section-anchor">1. 二进制文件的结构</h2>
+
+  <p>可执行文件不是"一段机器码"，而是有格式的容器。macOS 用 <strong>Mach-O</strong>，Linux 用 <strong>ELF</strong>，两者概念相同但字段不同。</p>
+
+  <h3>Mach-O（macOS ARM64）</h3>
+
+  <div class="memmap">
+    <div class="memmap-row" style="background:#111;font-weight:700;font-size:11px;color:var(--muted);">
+      <span class="memmap-addr">File Offset / VA</span>
+      <span class="memmap-label">区域</span>
+      <span class="memmap-size">大小</span>
+    </div>
+    <div class="memmap-row" style="background:#1a1010;">
+      <span class="memmap-addr">0x000 – 0x???</span>
+      <span class="memmap-label" style="color:#666;">Mach-O Header + Load Commands（描述文件布局的元数据）</span>
+      <span class="memmap-size">~500 B</span>
+    </div>
+    <div class="memmap-row pagezero">
+      <span class="memmap-addr">VA 0x0 – 0x1_0000_0000</span>
+      <span class="memmap-label">__PAGEZERO（仅虚拟，不占文件空间，捕获 null 解引用）</span>
+      <span class="memmap-size">4 GB</span>
+    </div>
+    <div class="memmap-row text-seg">
+      <span class="memmap-addr">file 0x0, VA 0x1_0000_0000</span>
+      <span class="memmap-label">__TEXT 段（r-x，可执行，filesize = 0x4000）</span>
+      <span class="memmap-size">16 KB</span>
+    </div>
+    <div class="memmap-row text-sect">
+      <span class="memmap-addr">file 0x360, VA 0x1_0000_0360</span>
+      <span class="memmap-label">__text（实际机器码，9 条指令）</span>
+      <span class="memmap-size">36 B</span>
+    </div>
+    <div class="memmap-row unwind">
+      <span class="memmap-addr">file 0x384, VA 0x1_0000_0384</span>
+      <span class="memmap-label">__unwind_info（栈展开元数据，C++ 异常 / crash reporter 用）</span>
+      <span class="memmap-size">88 B</span>
+    </div>
+    <div class="memmap-row cave">
+      <span class="memmap-addr">file 0x3dc – 0x4000</span>
+      <span class="memmap-label" style="font-weight:700;">★ CODE CAVE：页对齐填充（全 0x00，是可执行内存！）</span>
+      <span class="memmap-size">15 KB</span>
+    </div>
+    <div class="memmap-row linkedit">
+      <span class="memmap-addr">file 0x4000</span>
+      <span class="memmap-label">__LINKEDIT（符号表、dyld 导出表、重定位信息，不可执行）</span>
+      <span class="memmap-size">456 B</span>
+    </div>
+  </div>
+
+  <h3>ELF（Linux x86-64）</h3>
+  <div class="memmap">
+    <div class="memmap-row" style="background:#111;font-weight:700;font-size:11px;color:var(--muted);">
+      <span class="memmap-addr">File Offset / VA</span>
+      <span class="memmap-label">区域</span>
+      <span class="memmap-size">大小</span>
+    </div>
+    <div class="memmap-row" style="background:#1a1010;">
+      <span class="memmap-addr">0x0</span>
+      <span class="memmap-label" style="color:#666;">ELF Header（64B）+ Program Headers（每个 56B）</span>
+      <span class="memmap-size">~400 B</span>
+    </div>
+    <div class="memmap-row text-seg">
+      <span class="memmap-addr">VA 0x401000（典型）</span>
+      <span class="memmap-label">.text（r-x，实际代码）</span>
+      <span class="memmap-size">varies</span>
+    </div>
+    <div class="memmap-row unwind">
+      <span class="memmap-addr">紧随 .text</span>
+      <span class="memmap-label">.rodata、.eh_frame、.eh_frame_hdr（只读数据 / 展开信息）</span>
+      <span class="memmap-size">varies</span>
+    </div>
+    <div class="memmap-row cave">
+      <span class="memmap-addr">section 间隙</span>
+      <span class="memmap-label">★ Code Cave：节间对齐填充（通常 0x00，大小 = 页大小 mod）</span>
+      <span class="memmap-size">0–4095 B</span>
+    </div>
+    <div class="memmap-row linkedit">
+      <span class="memmap-addr">file 末尾</span>
+      <span class="memmap-label">.symtab、.strtab、.debug_*（Section Headers 索引）</span>
+      <span class="memmap-size">varies</span>
+    </div>
+  </div>
+
+  <div class="callout callout-info">
+    <strong>关键差异：Segment vs Section</strong>
+    Mach-O 和 ELF 都有"段（segment）"和"节（section）"两层概念。<br>
+    <strong>段</strong>：运行时概念，OS loader 按段映射内存（有权限 r/w/x）。<br>
+    <strong>节</strong>：链接时概念，段内的细分区域（<code>__text</code>、<code>.bss</code> 等）。<br>
+    Cave 通常藏在同一个"可执行段"内的节间隙或尾部填充中。
+  </div>
+
+  <!-- ─────────────────────────────────────────── 2 -->
+  <h2 id="s2" class="section-anchor">2. 为什么 Cave 一定存在</h2>
+
+  <p>Cave 的根本来源是 <strong>页对齐（Page Alignment）</strong>。OS 内存管理以页为单位（macOS ARM64 通常 16 KB，Linux x86-64 通常 4 KB），所以每个可执行段的文件大小必须对齐到页边界。</p>
+
+  <pre><code><span class="comment"># 我们的 main 二进制</span>
+实际代码:     36 bytes   (__text)
+unwind_info:  88 bytes   (__unwind_info)
+─────────────────────────
+实际内容:    124 bytes
+__TEXT 段:  16384 bytes  (= 4 KB 页，macOS 最小分配单位)
+═════════════════════════
+Cave 大小:  <span class="num">15396 bytes = ~15 KB</span>   ← 全是 0x00，且在可执行段内！</code></pre>
+
+  <div class="callout callout-tip">
+    <strong>结论</strong>
+    只要程序比一整页小，Cave 就必然存在。哪怕是大型程序，节与节之间也有对齐填充。
+    Cave 的字节是 <strong>0x00</strong>，它们<strong>在可执行内存中</strong>——只要你的代码能跳过去，CPU 就能执行它们。
+  </div>
+
+  <!-- ─────────────────────────────────────────── 3 -->
+  <h2 id="s3" class="section-anchor">3. udf #0x0 和 &lt;unknown&gt; 是什么</h2>
+
+  <p>LLDB 对 <code>__text</code> 以外的区域强行按指令解码会得到这些输出：</p>
+
+  <table>
+    <tr><th>输出</th><th>原始字节</th><th>真实含义</th></tr>
+    <tr>
+      <td><code>udf #0x0</code></td>
+      <td><code>00 00 00 00</code></td>
+      <td>ARM64 编码 0x00000000 = "Undefined" 指令。这是 <code>__unwind_info</code> / padding 的 0x00 字节被<strong>误当指令解码</strong>。</td>
+    </tr>
+    <tr>
+      <td><code>udf #0x3</code></td>
+      <td><code>03 00 00 00</code></td>
+      <td><code>__unwind_info</code> 里的版本号字段（小端 int = 3），被误读为 ARM64 指令。</td>
+    </tr>
+    <tr>
+      <td><code>&lt;unknown&gt;</code></td>
+      <td>非 0x00 字节</td>
+      <td><code>__unwind_info</code> 的实际元数据（函数地址、帧信息等），不是合法 ARM64 指令，解码器不认识。</td>
+    </tr>
+  </table>
+
+  <div class="callout callout-warn">
+    <strong>注意</strong>
+    Cave 不能放在 <code>__unwind_info</code> 里！那里是 C++/ObjC 栈展开元数据，破坏它会导致 crash reporter、C++ 异常、<code>backtrace()</code> 失效。Cave 要放在 <strong>所有 section 结束之后</strong> 的纯 padding 区域（本例是 <code>0x3dc</code> 以后）。
+  </div>
+
+  <!-- ─────────────────────────────────────────── 4 -->
+  <h2 id="s4" class="section-anchor">4. Code Caving 原理</h2>
+
+  <h3>两种 patch 方式对比</h3>
+  <table>
+    <tr><th>方式</th><th>原理</th><th>限制</th><th>适用场景</th></tr>
+    <tr>
+      <td><strong>原地 Patch</strong></td>
+      <td>直接覆盖原指令字节</td>
+      <td>只能用原指令的字节数</td>
+      <td>新逻辑 ≤ 原指令大小</td>
+    </tr>
+    <tr>
+      <td><strong>Code Caving</strong></td>
+      <td>原地写跳转，逻辑写到 Cave</td>
+      <td>需要找到可执行 Cave</td>
+      <td>新逻辑比原指令大，或逻辑复杂</td>
+    </tr>
+  </table>
+
+  <h3>执行流程图（本例）</h3>
+  <pre><code><span class="label">原始代码：</span>
+  <span class="inst">+12:</span> <span class="kw">ldr</span> <span class="reg">x8</span>, [<span class="reg">sp</span>, #0x10]   <span class="comment">← 加载指针</span>
+  <span class="inst">+16:</span> <span class="kw">ldr</span> <span class="reg">w8</span>, [<span class="reg">x8</span>]           <span class="comment">← 解引用（可能崩）</span>
+  <span class="inst">+20:</span> <span class="kw">str</span> <span class="reg">w8</span>, [<span class="reg">sp</span>, #0xc]
+  <span class="inst">+24:</span> <span class="kw">ldr</span> <span class="reg">w0</span>, [<span class="reg">sp</span>, #0xc]
+  <span class="inst">+28:</span> <span class="kw">add</span> <span class="reg">sp</span>, <span class="reg">sp</span>, #0x20
+  <span class="inst">+32:</span> <span class="kw">ret</span>
+
+<span class="label">Patch 后：</span>
+  <span class="inst">+12:</span> <span class="kw">ldr</span> <span class="reg">x8</span>, [<span class="reg">sp</span>, #0x10]   <span class="comment">← 不动</span>
+  <span class="inst">+16:</span> <span class="kw">b</span>   cave             <span class="comment">← 4字节跳转（原 ldr w8,[x8] 的位置）</span>
+  <span class="inst">+20:</span> <span class="kw">str</span> <span class="reg">w8</span>, [<span class="reg">sp</span>, #0xc]   <span class="comment">← 不动，cave 跳回这里</span>
+  <span class="inst">+24:</span> <span class="kw">ldr</span> <span class="reg">w0</span>, [<span class="reg">sp</span>, #0xc]   <span class="comment">← 不动</span>
+  ...
+
+<span class="label">Cave（在 padding 区 0x3dc）：</span>
+  cave+0: <span class="kw">cbz</span> <span class="reg">x8</span>, #8      <span class="comment">← x8==null? 跳过解引用</span>
+  cave+4: <span class="kw">ldr</span> <span class="reg">w8</span>, [<span class="reg">x8</span>]   <span class="comment">← 解引用（只有非 null 才到这）</span>
+  cave+8: <span class="kw">b</span>   +20         <span class="comment">← 跳回 str w8,[sp,#0xc]</span>
+
+  <span class="comment">null  路径: cbz → cave+8 → b +20 → w8=0 → str 0 → ldr w0=0 ✓</span>
+  <span class="comment">非null路径: ldr w8,[x8] → cave+8 → b +20 → str *x8 → ldr w0=*x8 ✓</span></code></pre>
+
+  <h3>B 指令编码（ARM64）</h3>
+  <pre><code><span class="comment">B 格式：</span>  [ 000101 | imm26 ]   (32 bit, little-endian)
+           bits[31:26] = 0x05
+           imm26 = (target_VA - branch_VA) / 4   （有符号，±128 MiB 范围）
+
+<span class="comment">Python：</span>
+<span class="kw">def</span> <span class="fn">encode_b</span>(from_off, to_off):
+    imm26 = (to_off - from_off) // <span class="num">4</span>
+    <span class="kw">assert</span> -(1 << 25) <= imm26 < (1 << 25)     <span class="comment"># 26-bit 有符号范围</span>
+    <span class="kw">return</span> struct.pack(<span class="str">"&lt;I"</span>, <span class="num">0x14000000</span> | (imm26 & <span class="num">0x3FFFFFF</span>))
+
+<span class="comment">同段内 file-offset 差 = VA 差，可以直接用文件偏移计算。</span></code></pre>
+
+  <!-- ─────────────────────────────────────────── 5 -->
+  <h2 id="s5" class="section-anchor">5. macOS 工具链</h2>
+
+  <h3>工具总览</h3>
+  <table>
+    <tr><th>工具</th><th>作用</th><th>典型命令</th></tr>
+    <tr>
+      <td><code>otool -l</code></td>
+      <td>查看 Mach-O Load Commands（段/节布局、文件偏移）</td>
+      <td><code>otool -l main | grep -A8 sectname</code></td>
+    </tr>
+    <tr>
+      <td><code>xcrun llvm-objdump</code></td>
+      <td>反汇编、查看 section 内容</td>
+      <td><code>llvm-objdump -d --start-address=0x... main</code></td>
+    </tr>
+    <tr>
+      <td><code>xcrun llvm-mc</code></td>
+      <td>汇编 → 字节码（验证指令编码）</td>
+      <td><code>echo "cbz x8, #8" | xcrun llvm-mc -arch=aarch64 -show-encoding</code></td>
+    </tr>
+    <tr>
+      <td><code>xxd</code></td>
+      <td>十六进制转储，查看原始字节</td>
+      <td><code>xxd main | sed -n '/000003[5-f]/p'</code></td>
+    </tr>
+    <tr>
+      <td><code>size -m</code></td>
+      <td>各段大小汇总</td>
+      <td><code>size -m main</code></td>
+    </tr>
+    <tr>
+      <td><code>nm</code></td>
+      <td>符号表（函数名 → VA）</td>
+      <td><code>nm -n main</code></td>
+    </tr>
+    <tr>
+      <td><code>lldb</code></td>
+      <td>调试器（验证 patch 效果）</td>
+      <td><code>lldb ./main_patched</code> → <code>r</code></td>
+    </tr>
+    <tr>
+      <td><code>python3</code></td>
+      <td>自动化 patch 脚本</td>
+      <td>用 <code>bytearray</code> + <code>struct.pack</code></td>
+    </tr>
+    <tr>
+      <td><code>Hopper / Binary Ninja / Ghidra</code></td>
+      <td>GUI 反编译（看高层逻辑）</td>
+      <td>拖入文件即可</td>
+    </tr>
+  </table>
+
+  <h3>macOS 完整流水线</h3>
+  <div class="flow">
+    <div class="flow-step"><div class="step-num">Step 1</div><div class="step-tool">otool -l</div><div class="step-desc">理解段/节布局<br>找 fileoff+size</div></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step"><div class="step-num">Step 2</div><div class="step-tool">llvm-objdump</div><div class="step-desc">反汇编<br>定位 patch 点</div></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step"><div class="step-num">Step 3</div><div class="step-tool">llvm-mc</div><div class="step-desc">获取新指令<br>的字节编码</div></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step"><div class="step-num">Step 4</div><div class="step-tool">python3</div><div class="step-desc">写 patch 脚本<br>找 Cave / 写字节</div></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step"><div class="step-num">Step 5</div><div class="step-tool">lldb / run</div><div class="step-desc">验证 patched<br>二进制行为</div></div>
+  </div>
+
+  <h4>Step 1：理解布局</h4>
+  <pre><code>otool -l main | grep -E 'sectname|segname|addr|size|offset' | head -40
+<span class="comment"># → 得到 __text: fileoff=864(0x360), size=36(0x24)</span>
+<span class="comment"># → 得到 __unwind_info: fileoff=900(0x384), size=88(0x58)</span>
+<span class="comment"># → 得到 __TEXT filesize=16384(0x4000)</span>
+<span class="comment"># Cave 安全区 = 所有 section 结束后到 segment 末尾</span></code></pre>
+
+  <h4>Step 2：定位 patch 点</h4>
+  <pre><code>xcrun llvm-objdump -d main
+<span class="comment"># 找到目标指令，记录 VA（如 0x100000370）</span>
+<span class="comment"># VA → file offset: offset = VA - 0x100000000（简单二进制通常如此）</span></code></pre>
+
+  <h4>Step 3：获取字节码</h4>
+  <pre><code><span class="comment"># 汇编 → 字节码</span>
+echo "cbz x8, #8
+ldr w8, [x8]
+b #-0x6c" | xcrun llvm-mc -arch=aarch64 -show-encoding
+
+<span class="comment"># 字节码 → 反汇编（验证）</span>
+python3 -c "
+import struct
+word = struct.unpack('&lt;I', bytes.fromhex('edffff17'))[0]
+imm26 = word & 0x3FFFFFF
+if imm26 >= (1&lt;&lt;25): imm26 -= (1&lt;&lt;26)
+print(f'B target: current_VA + {imm26*4}')
+"</code></pre>
+
+  <h4>Step 4：patch 脚本模板</h4>
+  <pre><code><span class="kw">import</span> struct
+
+<span class="kw">with</span> <span class="fn">open</span>(<span class="str">"binary"</span>, <span class="str">"rb"</span>) <span class="kw">as</span> f:
+    data = bytearray(f.read())
+
+<span class="comment"># 1. 定位 hook 点</span>
+hook_offset = data.find(b<span class="str">'\x08\x01\x40\xb9'</span>)
+
+<span class="comment"># 2. 找 Cave（在所有 section 结束后的 padding）</span>
+SAFE_START = <span class="num">0x3dc</span>    <span class="comment"># ← 从 otool 得到，必须在所有 section 之后</span>
+cave_offset = <span class="kw">None</span>
+<span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(SAFE_START, <span class="fn">len</span>(data) - <span class="num">12</span>):
+    <span class="kw">if</span> i % <span class="num">4</span> == <span class="num">0</span> <span class="kw">and</span> <span class="fn">all</span>(b == <span class="num">0</span> <span class="kw">for</span> b <span class="kw">in</span> data[i:i+<span class="num">12</span>]):
+        cave_offset = i; <span class="kw">break</span>
+
+<span class="comment"># 3. B 指令编码</span>
+<span class="kw">def</span> <span class="fn">encode_b</span>(from_off, to_off):
+    imm26 = (to_off - from_off) // <span class="num">4</span>
+    <span class="kw">assert</span> -(1 &lt;&lt; <span class="num">25</span>) &lt;= imm26 &lt; (1 &lt;&lt; <span class="num">25</span>)
+    <span class="kw">return</span> struct.pack(<span class="str">"&lt;I"</span>, <span class="num">0x14000000</span> | (imm26 & <span class="num">0x3FFFFFF</span>))
+
+<span class="comment"># 4. 写 Cave 代码</span>
+data[cave_offset:cave_offset+<span class="num">12</span>] = (
+    b<span class="str">'\x48\x00\x00\xb4'</span>                    <span class="comment"># cbz x8, #8</span>
+    + b<span class="str">'\x08\x01\x40\xb9'</span>                  <span class="comment"># ldr w8, [x8]</span>
+    + <span class="fn">encode_b</span>(cave_offset+<span class="num">8</span>, hook_offset+<span class="num">4</span>)  <span class="comment"># B back</span>
+)
+
+<span class="comment"># 5. Hook：原位置写 B cave</span>
+data[hook_offset:hook_offset+<span class="num">4</span>] = <span class="fn">encode_b</span>(hook_offset, cave_offset)
+
+<span class="kw">with</span> <span class="fn">open</span>(<span class="str">"binary_patched"</span>, <span class="str">"wb"</span>) <span class="kw">as</span> f:
+    f.write(data)</code></pre>
+
+  <h4>Step 5：验证</h4>
+  <pre><code><span class="comment"># 反汇编确认 hook 点</span>
+xcrun llvm-objdump -d --start-address=0x100000370 --stop-address=0x100000380 binary_patched
+<span class="comment"># 应看到: 1400001b   b 0x1000003dc</span>
+
+<span class="comment"># 运行验证</span>
+./binary_patched; echo "exit: $?"
+
+<span class="comment"># LLDB 单步</span>
+lldb ./binary_patched
+(lldb) b main
+(lldb) r
+(lldb) si   <span class="comment"># step instruction</span></code></pre>
+
+  <!-- ─────────────────────────────────────────── 6 -->
+  <h2 id="s6" class="section-anchor">6. Linux x86-64 工具链</h2>
+
+  <p>ELF 格式，x86-64 指令集，工具全部换一套。</p>
+
+  <table>
+    <tr><th>工具</th><th>对应 macOS 工具</th><th>作用</th></tr>
+    <tr><td><code>readelf -S / -l</code></td><td><code>otool -l</code></td><td>查看 ELF section/segment 表</td></tr>
+    <tr><td><code>objdump -d</code></td><td><code>llvm-objdump -d</code></td><td>反汇编</td></tr>
+    <tr><td><code>nasm / as</code></td><td><code>xcrun llvm-mc</code></td><td>汇编 → 字节码</td></tr>
+    <tr><td><code>xxd / hexdump -C</code></td><td><code>xxd</code></td><td>十六进制查看</td></tr>
+    <tr><td><code>nm / objcopy</code></td><td><code>nm</code></td><td>符号表、二进制修改</td></tr>
+    <tr><td><code>gdb / pwndbg</code></td><td><code>lldb</code></td><td>调试</td></tr>
+    <tr><td><code>pwntools (python)</code></td><td>手写 struct.pack</td><td>自动化 patch + 指令编码</td></tr>
+    <tr><td><code>patchelf</code></td><td>-</td><td>修改 ELF interpreter / RPATH</td></tr>
+    <tr><td><code>r2 / Ghidra</code></td><td>Hopper / Ghidra</td><td>反编译、图形化分析</td></tr>
+  </table>
+
+  <h3>Linux 完整流水线</h3>
+
+  <h4>Step 1：理解 ELF 布局</h4>
+  <pre><code>readelf -S binary          <span class="comment"># 所有 section 的 offset+size</span>
+readelf -l binary          <span class="comment"># Program Headers（段，含权限）</span>
+size binary                <span class="comment"># text/data/bss 大小汇总</span>
+
+<span class="comment"># 关键字段：
+# Offset = 文件偏移
+# VirtAddr = 运行时 VA
+# 找 LOAD 段（flags RE = 可执行）的结尾 → Cave 在这里</span></code></pre>
+
+  <h4>Step 2：反汇编定位</h4>
+  <pre><code>objdump -d -M intel binary             <span class="comment"># Intel 语法</span>
+objdump -d -M att binary               <span class="comment"># AT&T 语法（默认）</span>
+objdump -d --start-address=0x401150 binary  <span class="comment"># 从特定地址开始</span></code></pre>
+
+  <h4>Step 3：x86-64 指令编码</h4>
+  <pre><code><span class="comment"># 方法一：用 nasm</span>
+cat > /tmp/t.asm &lt;&lt;'EOF'
+BITS 64
+test rax, rax
+jz .skip
+mov eax, [rax]
+.skip:
+EOF
+nasm -f bin /tmp/t.asm -o /tmp/t.bin
+xxd /tmp/t.bin
+
+<span class="comment"># 方法二：用 pwntools（最推荐）</span>
+python3 -c "
+from pwn import *
+context.arch = 'amd64'
+code = asm('''
+  test rax, rax
+  jz skip
+  mov eax, [rax]
+  skip:
+''')
+print(code.hex())
+print(disasm(code))
+"</code></pre>
+
+  <h4>Step 4：x86-64 相对跳转编码</h4>
+  <pre><code><span class="comment"># x86-64 near jump: E9 + rel32 (4字节有符号偏移)
+# rel32 = target - (jmp_addr + 5)   ← 5 = JMP 指令自身长度</span>
+
+<span class="kw">def</span> <span class="fn">encode_jmp</span>(from_off, to_off):
+    rel32 = to_off - (from_off + <span class="num">5</span>)   <span class="comment"># x86 偏移从指令末尾算起</span>
+    <span class="kw">return</span> b<span class="str">'\xe9'</span> + struct.pack(<span class="str">"&lt;i"</span>, rel32)
+
+<span class="comment"># 注意：ARM64 的 B 从指令开头算，x86 JMP 从指令结尾算！</span>
+
+<span class="comment"># 短跳转（±127 字节）：EB + rel8（2字节）</span>
+<span class="comment"># 条件跳转：74(JZ) / 75(JNZ) + rel8，或 0F 84(JZ) + rel32</span></code></pre>
+
+  <h4>Step 5：x86-64 null 检查 cave 代码</h4>
+  <pre><code><span class="comment"># 原始 x86-64 指令示例：
+# mov eax, [rax]   →  8B 00
+# 要在前面插 null 检查
+
+# Cave 代码（null check + dereference）：</span>
+<span class="kw">from</span> pwn <span class="kw">import</span> *
+context.arch = <span class="str">'amd64'</span>
+
+cave_code = asm(<span class="str">"""
+  test rax, rax          ; null check
+  jz skip                ; if null, skip
+  mov eax, [rax]         ; dereference
+  skip:
+  jmp 0x12345678         ; B back（地址需替换）
+"""</span>)
+
+<span class="comment"># Linux x86-64 Cave 查找：找 .text 末尾的 CC/00 padding</span>
+text_section = elf.get_section_by_name(<span class="str">'.text'</span>)
+text_end = text_section[<span class="str">'sh_offset'</span>] + text_section[<span class="str">'sh_size'</span>]
+<span class="comment"># 从 text_end 开始找 0x00 / 0xCC 区域</span></code></pre>
+
+  <h4>Step 6：pwntools 自动化 patch</h4>
+  <pre><code><span class="kw">from</span> pwn <span class="kw">import</span> *
+
+elf = ELF(<span class="str">'./binary'</span>)
+
+<span class="comment"># 读写任意地址</span>
+elf.read(addr, n)
+elf.write(addr, data)
+
+<span class="comment"># 汇编指令 → 字节码</span>
+elf.asm(addr, <span class="str">'nop'</span>)
+elf.asm(addr, <span class="str">'jmp 0x4012ab'</span>)
+
+<span class="comment"># 保存</span>
+elf.save(<span class="str">'./binary_patched'</span>)</code></pre>
+
+  <!-- ─────────────────────────────────────────── 7 -->
+  <h2 id="s7" class="section-anchor">7. 完整流水线对比</h2>
+
+  <table>
+    <tr>
+      <th>阶段</th>
+      <th><span class="tag tag-macos">macOS ARM64</span></th>
+      <th><span class="tag tag-linux">Linux x86-64</span></th>
+    </tr>
+    <tr>
+      <td><strong>格式</strong></td>
+      <td>Mach-O</td>
+      <td>ELF</td>
+    </tr>
+    <tr>
+      <td><strong>布局分析</strong></td>
+      <td><code>otool -l</code></td>
+      <td><code>readelf -S -l</code></td>
+    </tr>
+    <tr>
+      <td><strong>反汇编</strong></td>
+      <td><code>xcrun llvm-objdump -d</code></td>
+      <td><code>objdump -d -M intel</code></td>
+    </tr>
+    <tr>
+      <td><strong>指令编码</strong></td>
+      <td><code>xcrun llvm-mc -show-encoding</code></td>
+      <td><code>nasm -f bin</code> 或 <code>pwntools.asm()</code></td>
+    </tr>
+    <tr>
+      <td><strong>跳转类型</strong></td>
+      <td><code>B</code>（4B, ±128 MiB）<br><code>BL</code>（带链接，用于函数调用）</td>
+      <td><code>JMP rel8</code>（2B, ±127B）<br><code>JMP rel32</code>（5B, ±2GB）</td>
+    </tr>
+    <tr>
+      <td><strong>偏移计算</strong></td>
+      <td><code>imm26 = (to - from) / 4</code><br>从指令<strong>开头</strong>算</td>
+      <td><code>rel32 = to - (from + 5)</code><br>从指令<strong>结尾</strong>算</td>
+    </tr>
+    <tr>
+      <td><strong>Cave 位置</strong></td>
+      <td>__TEXT 段尾部 padding<br>（所有 section 之后，段 filesize 之前）</td>
+      <td>LOAD 段 .text section 末尾 padding<br>（常见 0xCC / 0x00 填充）</td>
+    </tr>
+    <tr>
+      <td><strong>patch 自动化</strong></td>
+      <td>Python <code>struct.pack + bytearray</code></td>
+      <td><code>pwntools ELF</code>（推荐）或同 Python</td>
+    </tr>
+    <tr>
+      <td><strong>调试验证</strong></td>
+      <td><code>lldb</code></td>
+      <td><code>gdb + pwndbg / peda</code></td>
+    </tr>
+    <tr>
+      <td><strong>GUI 分析</strong></td>
+      <td>Hopper / Binary Ninja</td>
+      <td>Ghidra / Binary Ninja / r2</td>
+    </tr>
+  </table>
+
+  <!-- ─────────────────────────────────────────── 8 -->
+  <h2 id="s8" class="section-anchor">8. 避坑备忘</h2>
+
+  <div class="callout callout-danger">
+    <strong>不能把 Cave 放在 __unwind_info 里</strong>
+    <code>__unwind_info</code>（macOS）/ <code>.eh_frame</code>（Linux）是栈展开元数据，破坏它会让 C++ 异常、crash reporter、<code>backtrace()</code> 出错。Cave 必须在所有 section 的 fileoff+size 之后的纯 padding 区域。
+  </div>
+
+  <div class="callout callout-warn">
+    <strong>ARM64：cbz x8 vs cbz w8</strong>
+    指针是 64-bit，null check 应该用 <code>cbz x8</code>（<code>\x48\x00\x00\xb4</code>），而不是 <code>cbz w8</code>（<code>\x48\x00\x00\x34</code>）。虽然 null == 0 在低 32 位也成立，但语义上应匹配寄存器宽度。
+  </div>
+
+  <div class="callout callout-warn">
+    <strong>x86-64：JMP 偏移从指令末尾算</strong>
+    <code>JMP rel32</code> 的偏移 = <code>target - (jmp_addr + 5)</code>，不是从指令开头。ARM64 的 B 是从指令开头。两个平台不同，不要混淆。
+  </div>
+
+  <div class="callout callout-info">
+    <strong>验证字节码的正确姿势</strong>
+    <ol style="margin:8px 0 0 16px;">
+      <li>汇编 → 字节码：<code>llvm-mc -show-encoding</code> / <code>nasm -f bin + xxd</code></li>
+      <li>字节码 → 反汇编：<code>struct.unpack</code> 手动解码 imm 字段，比较 target VA</li>
+      <li>最终用 <code>llvm-objdump</code> / <code>objdump</code> 确认 patched 二进制</li>
+    </ol>
+  </div>
+
+  <div class="callout callout-tip">
+    <strong>macOS code sign / codesign 问题</strong>
+    修改二进制后原有签名失效，运行前需要重签：<br>
+    <code>codesign -s - --force main_patched</code>（用本地 ad-hoc 签名）<br>
+    如果是系统程序还需要关闭 SIP。自己编译的二进制无需此步。
+  </div>
+
+  <hr>
+  <p style="color:var(--muted);font-size:12px;text-align:center;">Binary Patching Notes — macOS ARM64 & Linux x86-64 — 2026-06-20</p>
+</div>
+
+<script>
+  // 高亮当前 sidebar 项
+  const links = document.querySelectorAll('.sidebar a');
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        links.forEach(l => l.classList.remove('active'));
+        const match = document.querySelector(`.sidebar a[href="#${e.target.id}"]`);
+        if (match) match.classList.add('active');
+      }
+    });
+  }, { threshold: 0.3 });
+  document.querySelectorAll('.section-anchor').forEach(s => observer.observe(s));
+</script>
+</body>
+</html>
