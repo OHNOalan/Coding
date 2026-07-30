@@ -489,22 +489,20 @@
 			"",
 			"    T rangeSum(int l, int r) { return sum(r) - sum(l); }",
 			"",
-			"    // int select(const T &k) {",
-			"    //     int x = 0;",
-			"    //     T cur{};",
-			"    //     // use bit_floor for local clang",
-			"    //     for (int i = 1 << std::__lg(n); i; i /= 2) {",
-			"    //         if (x + i <= n && cur + a[x + i - 1] <= k) {",
-			"    //             x += i;",
-			"    //             cur = cur + a[x - 1];",
-			"    //         }",
-			"    //     }",
-			"    //     return x;",
-			"    // }",
-			"};",
-			""
+			"    int select(const T &k) {",
+			"        int x = 0;",
+			"        T cur{};",
+			"        for (int i = std::bit_floor(unsigned(n)); i; i /= 2) {",
+			"            if (x + i <= n && cur + a[x + i - 1] <= k) {",
+			"                x += i;",
+			"                cur = cur + a[x - 1];",
+			"            }",
+			"        }",
+			"        return x;",
+			"    }",
+			"};"
 		],
-		"description": "DATA STRUCTURE"
+		"description": "DS_FENWICK"
 	},
 	"DS_XORBASIS": {
 		"prefix": "XORBASIS",
@@ -1192,5 +1190,37 @@
 			"}"
 		],
 		"description": "lg"
+	},
+	"MATRIX": {
+		"prefix": "MATRIX",
+		"body": [
+			"template<size_t Rows, size_t Cols>",
+			"struct Matrix {",
+			"    std::array<std::array<int, Cols>, Rows> a;",
+			"",
+			"    Matrix() : a{} {}",
+			"",
+			"    Matrix(const std::array<std::array<int, Cols>, Rows> &a) : a(a) {}",
+			"",
+			"    // (R1 x C1) * (C1 x C2) -> (R1 x C2)",
+			"    template<size_t R1, size_t C1, size_t C2>",
+			"    friend Matrix<R1, C2> operator*(const Matrix<R1, C1> &lhs, const Matrix<C1, C2> &rhs) {",
+			"        Matrix<R1, C2> ret;",
+			"",
+			"        // i -> k -> j for Cache Line",
+			"        for (size_t i = 0; i < R1; ++i) {",
+			"            for (size_t k = 0; k < C1; ++k) {",
+			"                if (lhs.a[i][k] == 0) continue;",
+			"                long long factor = lhs.a[i][k];",
+			"                for (size_t j = 0; j < C2; ++j) {",
+			"                    (ret.a[i][j] += factor * rhs.a[k][j] % MOD) %= MOD;",
+			"                }",
+			"            }",
+			"        }",
+			"        return ret;",
+			"    }",
+			"};"
+		],
+		"description": "MATRIX"
 	}
 }

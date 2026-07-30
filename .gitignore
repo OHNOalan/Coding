@@ -6,11 +6,27 @@ TEST/*
 *.out
 *.txt
 
-main*
-std*
+main
+main_*
+main2
+std
+std_*
+# the patterns above only target run.sh's bare-name scratch binaries
+# (./main, ./main_fast, ./std, ...) - keep real source files tracked
+# regardless of a main*/std* prefix (main2.cpp, main.py, std.cpp, ...).
+!*.cpp
+!*.c
+!*.h
+!*.hpp
+!*.py
+!*.sh
+!*.md
 
 # GCC/Clang compiler-internals dump artifacts (-fdump-tree-all, GIMPLE/RTL passes, etc.)
-a-*.cpp.*
+*.cpp.*
+
+# Preprocessed source dumps (clang -E / -save-temps)
+*.i
 
 # LLVM PGO instrumentation output
 *.profraw
