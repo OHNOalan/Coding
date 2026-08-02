@@ -20,6 +20,7 @@ import argparse
 import random
 import select
 import shlex
+import signal
 import subprocess
 import sys
 from math import gcd
@@ -30,6 +31,21 @@ TIMEOUT_S = 5.0
 class Verdict(Exception):
     def __init__(self, msg):
         self.msg = msg
+
+
+def describe_returncode(code):
+    """subprocess encodes 'killed by signal N' as returncode -N; decode it."""
+    if code is None:
+        return "still running"
+    if code >= 0:
+        return str(code)
+    sig = -code
+    try:
+        name = signal.Signals(sig).name
+    except ValueError:
+        return f"{code} (unknown signal {sig})"
+    desc = signal.strsignal(sig) or ""
+    return f"{code} ({name}{': ' + desc if desc else ''})"
 
 
 def read_tests(path):
@@ -63,7 +79,7 @@ def run_ja(ja_cmd, test_path, tests, verbose):
         raise Verdict("Ja run timed out (30s)")
     if proc.returncode != 0:
         sys.stderr.write(proc.stderr)
-        raise Verdict(f"Ja exited with code {proc.returncode}")
+        raise Verdict(f"Ja exited with code {describe_returncode(proc.returncode)}")
     if verbose:
         sys.stderr.write(proc.stderr)
 
@@ -114,8 +130,15 @@ class Interactor:
             raise Verdict(f"Quack produced no output within {timeout}s (hang?)")
         line = self.proc.stdout.readline()
         if line == "":
+            try:
+                self.proc.wait(timeout=1)
+            except subprocess.TimeoutExpired:
+                pass
+            rc = self.proc.returncode
             self.kill()
-            raise Verdict("Quack closed stdout / crashed mid-interaction")
+            raise Verdict(
+                f"Quack closed stdout / crashed mid-interaction (exit {describe_returncode(rc)})"
+            )
         line = line.strip()
         if self.verbose:
             sys.stderr.write(f"<< {line}\n")

@@ -56,3 +56,10 @@ gcm.cache/
 /vuln
 /patch
 /old
+
+# macOS Finder metadata
+.DS_Store
+
+# Python bytecode cache
+__pycache__/
+*.pyc
