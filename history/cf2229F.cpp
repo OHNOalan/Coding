@@ -1,74 +1,50 @@
 #include <bits/stdc++.h>
 
-using i64 = long long;
-using u64 = unsigned long long;
-using u32 = unsigned;
-
-using u128 = unsigned __int128;
-using i128 = __int128;
-
-namespace rgs = std::ranges;
+using namespace std;
 
 void solve() {
     int n, k;
-    std::cin >> n >> k;
-
-    std::vector<int> a(n);
-    for (int i = 0; i < n; i++) {
-        std::cin >> a[i];
-    }
-
-    rgs::sort(a);
-
-    n--;
-    int last = a[n];
-    a.resize(n);
-
-    auto check = [&](i64 x) -> bool {
-        std::vector<std::pair<int, i64>> dp(1 << n);
-        for (int s = 0; s < (1 << n); ++s) {
-            auto [cur, sum] = dp[s];
+    cin >> n >> k;
+    vector<int> a(n);
+    for (int i = 0; i < n; i++) cin >> a[i];
+    ranges::sort(a);
+    long long x = a.back();
+    a.pop_back();
+    n -= 1;
+    if (n == 0) return void(cout << x << '\n');
+    vector<pair<int, long long>> dp(1 << n);
+    auto check = [&](long long m) -> bool {
+        fill(dp.begin(), dp.end(), pair<int, long long>(0, 0));
+        for (int sub = 0; sub < (1 << n); sub++) {
+            auto [cur, sum] = dp[sub];
             for (int i = 0; i < n; i++) {
-                if (~s >> i & 1) {
-                    int t = s | 1 << i;
+                if (~sub >> i & 1) {
+                    int mask = sub | 1 << i;
                     int ncur = cur;
-                    i64 nsum = sum + a[i];
-                    if (nsum >= x) {
+                    long long nsum = sum + a[i];
+                    if (nsum >= m) {
                         ++ncur;
                         nsum = 0;
                     }
-                    dp[t] = std::max(dp[t], std::make_pair(ncur, nsum));
+                    dp[mask] = max(dp[mask], make_pair(ncur, nsum));
                 }
             }
         }
         return dp.back().first >= k;
     };
-
-    i64 lo = 0, hi = 2E10;
-
-    while (lo < hi) {
-        i64 x = (lo + hi + 1) / 2;
-
-        if (check(x)) {
-            lo = x;
-        } else {
-            hi = x - 1;
-        }
+    long long l = 0, r = accumulate(a.begin(), a.end(), 0ll) / k + 1;
+    while (l + 1 < r) {
+        long long m = (l + r) / 2;
+        (check(m) ? l : r) = m;
     }
-
-    std::cout << lo + last << "\n";
+    cout << l + x << '\n';
 }
 
 int main() {
-    std::ios::sync_with_stdio(false);
-    std::cin.tie(nullptr);
+    ios::sync_with_stdio(0);
+    cin.tie(0);
 
-    int t;
-    std::cin >> t;
-
-    while (t--) {
-        solve();
-    }
-
-    return 0;
+    int t = 1;
+    cin >> t;
+    while (t--) solve();
 }
