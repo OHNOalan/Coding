@@ -19,7 +19,8 @@
   - `history/gym/` —— 朋友私建的 Codeforces Gym/VP 赛题(`Bround*`=Baozii Round、`Zround*`=
     Zrnstsr Round、`bcup*`=Baozii Cup),不是正式排名赛。
   - `history/dmoj/` —— DMOJ。
-  - `history/waterloo/` —— Waterloo 2026 冬季校赛(local contest)练习题,文件名前缀 `w26local`。
+  - `history/waterloo/` —— Waterloo 校赛(local contest)练习题:`w25fall*` = 2025 秋季,
+    `w26local*` = 2026 冬季。
 - `systems/` —— C++/Linux 系统编程实验(并发原语、分布式实验、UDP/CIDR 网络实验等),不是竞赛代码。
 - `comm_test/` —— 双程序交互题(run-twice / communication problem)本地测试工具,见下文。
 - `.vscode/`、`.idea/` —— 编辑器个人状态,只在本地,已从 git 移除跟踪(见 `.gitignore`)。
