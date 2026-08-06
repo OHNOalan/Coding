@@ -3,12 +3,23 @@
 # it produces lives here now, nothing spills into the repo root anymore.
 .build/
 
+# Editor state: personal/machine-specific, not meant to be shared across
+# clones (unlike .githooks/, which bootstrap.sh wires up on every clone and
+# stays tracked on purpose). Kept locally, just not pushed.
+.vscode/
+.idea/
+
 bin/*
 lib/*
 *.dSYM/*
 TEST/*
 *.out
 *.txt
+# scratch/in.txt and scratch/out.txt are the actual tracked skip-worktree
+# placeholders (see scratch/, bootstrap.sh) — the *.txt rule above is meant
+# for ad-hoc result/test-output txt files, not these two.
+!scratch/in.txt
+!scratch/out.txt
 
 main
 main_*
@@ -16,8 +27,7 @@ main2
 std
 std_*
 # the patterns above are a leftover safety net from before run.sh's output
-# moved into .build/ — they now mainly guard against other tools (e.g. the
-# VSCode/Cursor build task in .vscode/tasks.json) still dropping a bare
+# moved into .build/ — kept in case something else ever compiles a bare
 # ./main or ./std binary at the repo root. Keep real source files tracked
 # regardless of a main*/std* prefix (main2.cpp, main.py, std.cpp, ...).
 !*.cpp

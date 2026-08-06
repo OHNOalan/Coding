@@ -22,10 +22,14 @@ print_usage() {
   所有编译产物（二进制、.dSYM、程序输出）都放进 .build/，不会散落在仓库根目录，
   也不会被 git 跟踪（.gitignore 里已经整个忽略掉 .build/）。
 
-位置参数（in.txt/out.txt 可省略，省略就用默认值）：
-  name       必填，源文件名，不带 .cpp 后缀
-  in.txt     跑的时候喂给程序的输入文件          默认: in.txt
-  out.txt    对拍用的期望输出文件                 默认: out.txt
+  日常刷题的草稿在 scratch/（scratch/main.cpp、scratch/std.cpp），所以平时是
+  ./run.sh scratch/main 这样跑；<name> 可以带路径，in.txt/out.txt 没显式给的话
+  默认跟 <name> 同目录（比如 scratch/main 会自动去找 scratch/in.txt）。
+
+位置参数（in.txt/out.txt 可省略，省略就用 <name> 同目录下的默认值）：
+  name       必填，源文件名，不带 .cpp 后缀，可以带路径（如 scratch/main）
+  in.txt     跑的时候喂给程序的输入文件          默认: <name 所在目录>/in.txt
+  out.txt    对拍用的期望输出文件                 默认: <name 所在目录>/out.txt
 
 环境变量开关（默认都是空/关闭；写成 X=1 打开，非空即算打开）：
   RUN=1          编译后立即跑一次。不加这个只编译，不执行。
@@ -47,16 +51,16 @@ print_usage() {
   LSAN_OPTIONS         SAN=1 时生效，默认套 lsan-macos.supp 过滤 macOS 系统噪音
   NO_LSAN_SUPPRESS=1   跳过上面这个默认 suppressions，看原始 LSan 输出
 
-常见组合：
-  ./run.sh main                      只编译，不跑
-  RUN=1 ./run.sh main                编译 + 用 in.txt 跑一次 + diff out.txt
-  RUN=1 SAN=1 ./run.sh main          开 ASan/UBSan 跑一次
-  RUN=1 PERF=1 ./run.sh main         性能构建跑一次（不带 sanitizer/调试信息）
-  DEBUG=1 ./run.sh main              编译后直接进 lldb
-  RUN=1 INTERACTIVE=1 ./run.sh main  不读 in.txt，手动敲输入交互跑
-  RUN=1 NO_DIFF=1 ./run.sh main      跑完只看程序输出，不 diff
-  RUN=1 LLVM=1 ./run.sh main         应急换成 Homebrew LLVM 编译
-  ./run.sh clean                     清空 .build/
+常见组合（这里用日常刷题的 scratch/main 举例，换成别的路径/名字同理）：
+  ./run.sh scratch/main                      只编译，不跑
+  RUN=1 ./run.sh scratch/main                编译 + 用 scratch/in.txt 跑一次 + diff
+  RUN=1 SAN=1 ./run.sh scratch/main          开 ASan/UBSan 跑一次
+  RUN=1 PERF=1 ./run.sh scratch/main         性能构建跑一次（不带 sanitizer/调试信息）
+  DEBUG=1 ./run.sh scratch/main              编译后直接进 lldb
+  RUN=1 INTERACTIVE=1 ./run.sh scratch/main  不读 in.txt，手动敲输入交互跑
+  RUN=1 NO_DIFF=1 ./run.sh scratch/main      跑完只看程序输出，不 diff
+  RUN=1 LLVM=1 ./run.sh scratch/main         应急换成 Homebrew LLVM 编译
+  ./run.sh clean                             清空 .build/
 USAGE
 }
 
@@ -87,15 +91,24 @@ parse_args() {
             ;;
     esac
 
-    # 参数：第一个为源文件名（不带 .cpp），第二个可选输入文件，第三个可选输出说明
+    # 参数：第一个为源文件名（不带 .cpp，可以带路径，比如 scratch/main），
+    # 第二个可选输入文件，第三个可选输出说明。
     FILE=${1:?用法: $0 <name> [in.txt] [out.txt]（完整说明: $0 -h）}
-    IN=${2:-"in.txt"}
-    OUT=${3:-"out.txt"}
+    # in.txt/out.txt 默认跟 <name> 放在同一个目录下，而不是硬编码成当前目录——
+    # 日常刷题用 scratch/main.cpp，跑 ./run.sh scratch/main 就会自动找
+    # scratch/in.txt/scratch/out.txt；FILE 不带路径（比如在 history/ 某个
+    # 子目录下直接跑）时 dirname 是 "."，跟以前的行为完全一样。
+    local file_dir
+    file_dir="$(dirname "$FILE")"
+    IN=${2:-"$file_dir/in.txt"}
+    OUT=${3:-"$file_dir/out.txt"}
     ACTUAL_OUT=${ACTUAL_OUT:-"$BUILD_DIR/result.txt"}
 
     FILENAME="$FILE.cpp"
     BINARY="$BUILD_DIR/$FILE"
-    mkdir -p "$BUILD_DIR"
+    # $FILE 可能带路径（scratch/main、history/codeforces/cf1234A ...），.build/
+    # 下面要镜像出同样的子目录结构，不能只建 .build/ 本身。
+    mkdir -p "$(dirname "$BINARY")"
 }
 
 # ---------- 阶段 2：源文件存在性校验 ----------

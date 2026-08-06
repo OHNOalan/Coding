@@ -7,6 +7,6 @@ chmod +x .githooks/pre-commit
 git config core.hooksPath .githooks
 echo "hooks: core.hooksPath -> .githooks (pre-commit blocks binaries/oversized files)"
 
-SCRATCH_FILES=(main.cpp std.cpp in.txt out.txt)
+SCRATCH_FILES=(scratch/main.cpp scratch/std.cpp scratch/in.txt scratch/out.txt)
 git update-index --skip-worktree "${SCRATCH_FILES[@]}"
 echo "skip-worktree set on: ${SCRATCH_FILES[*]}"

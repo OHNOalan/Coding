@@ -4,8 +4,8 @@ set -euo pipefail
 # 用法(和 run.sh 保持一致的调用习惯，在仓库根目录执行):
 #   ./comm_test/run_comm.sh <name> [in.txt] [-- 额外传给 run_comm.py 的参数]
 # 例:
-#   ./comm_test/run_comm.sh sol                     # 用 in.txt
-#   ./comm_test/run_comm.sh sol my_case.txt -- -v    # 指定输入 + 打印交互过程
+#   ./comm_test/run_comm.sh scratch/sol                     # 用 scratch/in.txt
+#   ./comm_test/run_comm.sh scratch/sol my_case.txt -- -v    # 指定输入 + 打印交互过程
 #
 # in.txt 必须是 Run 1 (Ja) 收到的原始 jury 输入，即以 "first" 开头、
 # 包含 t 和每组 n/a 的那份数据 —— 这题没有独立的"第二份输入文件"，
@@ -14,7 +14,9 @@ set -euo pipefail
 # 由 run_comm.py 在协议重放结束后逐位核对。
 
 FILE=${1:?"用法: $0 <name> [in.txt] [-- extra run_comm.py args]"}
-IN=${2:-"in.txt"}
+# in.txt 没显式给的话，跟 run.sh 一样默认跟 <name> 放在同一个目录下
+# （比如 <name>=scratch/sol 就默认去找 scratch/in.txt）。
+IN=${2:-"$(dirname "$FILE")/in.txt"}
 shift $(( $# >= 2 ? 2 : 1 ))
 if [ "${1:-}" = "--" ]; then shift; fi
 

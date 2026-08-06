@@ -4,19 +4,26 @@
 
 ## 目录结构
 
-- `main.cpp` / `std.cpp` / `in.txt` / `out.txt` —— 每道新题的临时草稿。`std.cpp` 是本地对拍用的
-  暴力/正确参考解。四个都已 `git update-index --skip-worktree`,内容随便改,`git status`
-  永远看不见改动。云端只留一份极简占位符;这个状态是本地的,不会随 clone 同步,换机器
-  跑一次 `./bootstrap.sh` 就会重新设置好(顺带把 pre-commit 钩子也接上,见下文)。
-- `template/` —— 算法模板(DSU、线段树、Fenwick、Treap、Dinic、Modint 等),直接复制进 `main.cpp` 用。
+- `scratch/` —— 每道新题的临时草稿:`main.cpp`/`std.cpp`/`in.txt`/`out.txt`。`std.cpp` 是
+  本地对拍用的暴力/正确参考解。四个都已 `git update-index --skip-worktree`,内容随便改,
+  `git status` 永远看不见改动。云端只留一份极简占位符;这个状态是本地的,不会随 clone 同步,
+  换机器跑一次 `./bootstrap.sh` 就会重新设置好(顺带把 pre-commit 钩子也接上,见下文)。
+  心血来潮想开 `main2.cpp`/`std3.cpp` 之类的临时对照也放这里,写完不要了直接
+  `rm scratch/main2.cpp scratch/std3.cpp ...` 删那几个额外文件就行——注意别把
+  `main.cpp`/`std.cpp`/`in.txt`/`out.txt` 这四个基础文件也删了,它们是 skip-worktree,
+  删掉之后 `git checkout` 找不回来,得重新手动建 + 重新 `git update-index --skip-worktree`。
+- `template/` —— 算法模板(DSU、线段树、Fenwick、Treap、Dinic、Modint 等),直接复制进 `scratch/main.cpp` 用。
 - `history/` —— 按平台归档的历史提交,文件名保留原平台前缀(`cf2249A.cpp`、`abc466G.cpp` 之类):
   - `history/codeforces/` —— Codeforces 正式排名赛(Div/Edu Round 等)。
   - `history/atcoder/` —— AtCoder。
   - `history/gym/` —— 朋友私建的 Codeforces Gym/VP 赛题(`Bround*`=Baozii Round、`Zround*`=
     Zrnstsr Round、`bcup*`=Baozii Cup),不是正式排名赛。
   - `history/dmoj/` —— DMOJ。
+  - `history/waterloo/` —— Waterloo 2026 冬季校赛(local contest)练习题,文件名前缀 `w26local`。
 - `systems/` —— C++/Linux 系统编程实验(并发原语、分布式实验、UDP/CIDR 网络实验等),不是竞赛代码。
 - `comm_test/` —— 双程序交互题(run-twice / communication problem)本地测试工具,见下文。
+- `.vscode/`、`.idea/` —— 编辑器个人状态,只在本地,已从 git 移除跟踪(见 `.gitignore`)。
+  `.githooks/` 不一样,是共享的项目基建(pre-commit 钩子),继续跟踪、随 clone 同步。
 
 ## 首次 clone
 
@@ -25,15 +32,15 @@
 ```
 
 设置 `core.hooksPath` 指向 `.githooks/`(pre-commit 会拒绝提交编译产物/超过 5MB 的文件,
-误加的话用 `ALLOW_BINARY=1`/`ALLOW_BIG=1` 覆盖),并重新给 `main.cpp`/`std.cpp`/`in.txt`/
-`out.txt` 打上 `skip-worktree`。
+误加的话用 `ALLOW_BINARY=1`/`ALLOW_BIG=1` 覆盖),并重新给 `scratch/main.cpp`/`scratch/std.cpp`/
+`scratch/in.txt`/`scratch/out.txt` 打上 `skip-worktree`。
 
 ## 日常刷题:`run.sh`
 
 ```
-./run.sh <name> [in.txt] [out.txt]
-./run.sh -h            # 完整用法说明(所有环境变量开关、默认值、组合示例)
-./run.sh clean         # 清空 .build/，源码不受影响
+./run.sh scratch/main [in.txt] [out.txt]
+./run.sh -h                     # 完整用法说明(所有环境变量开关、默认值、组合示例)
+./run.sh clean                  # 清空 .build/，源码不受影响
 ```
 
 - 编译 `<name>.cpp` 为可执行文件 `.build/<name>`,默认 `-O0 -g` 调试构建。
@@ -55,8 +62,8 @@ problem)不能用 `run.sh` 的"两个文件 diff"模型——具体原因见 `co
 文件头注释。用法:
 
 ```
-./comm_test/run_comm.sh <name> [in.txt] [-- 额外参数，如 -v]
-./comm_test/stress.sh .build/<name> [iterations]   # 循环随机测例压测
+./comm_test/run_comm.sh scratch/sol [in.txt] [-- 额外参数，如 -v]
+./comm_test/stress.sh .build/scratch/sol [iterations]   # 循环随机测例压测
 ```
 
 `in.txt` 是 jury 喂给第一次运行的原始输入(以 `first` 开头),`comm_test/gen.py`
