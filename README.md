@@ -32,16 +32,21 @@
 
 ```
 ./run.sh <name> [in.txt] [out.txt]
+./run.sh -h            # 完整用法说明(所有环境变量开关、默认值、组合示例)
+./run.sh clean         # 清空 .build/，源码不受影响
 ```
 
-- 编译 `<name>.cpp` 为可执行文件 `<name>`,默认 `-O0 -g` 调试构建。
-- 环境变量开关:
+- 编译 `<name>.cpp` 为可执行文件 `.build/<name>`,默认 `-O0 -g` 调试构建。
+  所有编译产物(二进制、`.dSYM`、程序输出)都在 `.build/` 里,不会散落在仓库根目录,
+  也不会被 git 跟踪。
+- 环境变量开关(完整列表见 `./run.sh -h`):
   - `RUN=1` —— 编译后立即用 `in.txt` 跑一次,并和 `out.txt` diff。
   - `SAN=1` —— 开启 ASan/UBSan。
   - `PERF=1` —— 换成 `-O3` 性能构建(不带 sanitizer)。
   - `DEBUG=1` —— 编译后进 `lldb`。
   - `INTERACTIVE=1` —— 不读文件,直接交互式跑。
   - `NO_DIFF=1` —— 只看程序输出,不 diff。
+  - `LLVM=1` —— 应急开关,编译器切到 Homebrew 装的独立 LLVM。
 
 ## 双程序交互题:`comm_test/`
 
@@ -51,7 +56,7 @@ problem)不能用 `run.sh` 的"两个文件 diff"模型——具体原因见 `co
 
 ```
 ./comm_test/run_comm.sh <name> [in.txt] [-- 额外参数，如 -v]
-./comm_test/stress.sh ./<name> [iterations]   # 循环随机测例压测
+./comm_test/stress.sh .build/<name> [iterations]   # 循环随机测例压测
 ```
 
 `in.txt` 是 jury 喂给第一次运行的原始输入(以 `first` 开头),`comm_test/gen.py`

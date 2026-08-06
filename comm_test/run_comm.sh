@@ -30,4 +30,5 @@ echo ">>> 编译 $FILE.cpp（复用 run.sh，只编译不单独跑）..."
 RUN= "$REPO_ROOT/run.sh" "$FILE"
 
 echo ">>> 用 $IN 跑两次交互并核对最终答案..."
-python3 "$SCRIPT_DIR/run_comm.py" --test "$IN" --sol "$REPO_ROOT/$FILE" "$@"
+# run.sh 现在把编译产物放进 .build/，不再是仓库根目录下的裸 ./$FILE。
+python3 "$SCRIPT_DIR/run_comm.py" --test "$IN" --sol "$REPO_ROOT/.build/$FILE" "$@"

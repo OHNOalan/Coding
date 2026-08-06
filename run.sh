@@ -15,8 +15,12 @@ set -euo pipefail
 print_usage() {
     cat <<USAGE
 用法: $0 <name> [in.txt] [out.txt]
+     $0 clean       清空 .build/（编译产物/运行输出），源码不受影响
+     $0 -h|--help   打印这份说明
 
-  编译 <name>.cpp 为可执行文件 <name>。只编译不会跑，要跑得加 RUN=1。
+  编译 <name>.cpp 为可执行文件 .build/<name>。只编译不会跑，要跑得加 RUN=1。
+  所有编译产物（二进制、.dSYM、程序输出）都放进 .build/，不会散落在仓库根目录，
+  也不会被 git 跟踪（.gitignore 里已经整个忽略掉 .build/）。
 
 位置参数（in.txt/out.txt 可省略，省略就用默认值）：
   name       必填，源文件名，不带 .cpp 后缀
@@ -38,7 +42,7 @@ print_usage() {
                  默认走 xcrun，跟随 xcode-select 选中的 Xcode 工具链；只有
                  Apple clang 自己又出问题时才需要这个应急开关。
 
-  ACTUAL_OUT           程序实际输出存去哪个文件          默认: result.txt
+  ACTUAL_OUT           程序实际输出存去哪个文件          默认: .build/result.txt
   ASAN_OPTIONS         SAN=1 时生效，可覆盖默认值 detect_leaks=0:symbolize=1
   LSAN_OPTIONS         SAN=1 时生效，默认套 lsan-macos.supp 过滤 macOS 系统噪音
   NO_LSAN_SUPPRESS=1   跳过上面这个默认 suppressions，看原始 LSan 输出
@@ -52,14 +56,33 @@ print_usage() {
   RUN=1 INTERACTIVE=1 ./run.sh main  不读 in.txt，手动敲输入交互跑
   RUN=1 NO_DIFF=1 ./run.sh main      跑完只看程序输出，不 diff
   RUN=1 LLVM=1 ./run.sh main         应急换成 Homebrew LLVM 编译
+  ./run.sh clean                     清空 .build/
 USAGE
+}
+
+# ---------- 阶段 0：clean 子命令，跟 -h 一样在正式解析参数前就分流掉 ----------
+clean_build() {
+    local build_dir="$1"
+    if [ -d "$build_dir" ]; then
+        rm -rf "$build_dir"
+        echo "已清空 $build_dir/"
+    else
+        echo "$build_dir/ 本来就不存在，没什么要清的"
+    fi
 }
 
 # ---------- 阶段 1：解析命令行参数 + 环境变量默认值 ----------
 parse_args() {
+    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    BUILD_DIR=".build"
+
     case "${1:-}" in
         -h|--help)
             print_usage
+            exit 0
+            ;;
+        clean)
+            clean_build "$BUILD_DIR"
             exit 0
             ;;
     esac
@@ -68,11 +91,11 @@ parse_args() {
     FILE=${1:?用法: $0 <name> [in.txt] [out.txt]（完整说明: $0 -h）}
     IN=${2:-"in.txt"}
     OUT=${3:-"out.txt"}
-    ACTUAL_OUT=${ACTUAL_OUT:-"result.txt"}
-    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    ACTUAL_OUT=${ACTUAL_OUT:-"$BUILD_DIR/result.txt"}
 
     FILENAME="$FILE.cpp"
-    BINARY="$FILE"
+    BINARY="$BUILD_DIR/$FILE"
+    mkdir -p "$BUILD_DIR"
 }
 
 # ---------- 阶段 2：源文件存在性校验 ----------
@@ -176,7 +199,7 @@ run_bin() {
     local rc=0
     if [ -n "${DEBUG:-}" ]; then
         echo ">>> 启动 LLDB..."
-        lldb "./$BINARY" || rc=$?
+        lldb "$BINARY" || rc=$?
     elif [ -n "${INTERACTIVE:-}" ] || [ ! -f "$IN" ]; then
         # INTERACTIVE=1 和"没有 $IN 可读"其实是同一件事——不喂文件，直接接键盘输入，
         # 只是提示语不同，合并成一个分支避免重复。
@@ -185,13 +208,13 @@ run_bin() {
         else
             echo ">>> 提示: 无 ${IN}，直接运行..."
         fi
-        $STATIC "./$BINARY" || rc=$?
+        $STATIC "$BINARY" || rc=$?
         echo "退出码: $rc"
     else
         echo ">>> 输入: $IN"
         local tmp_err
         tmp_err="$(mktemp)"
-        $STATIC "./$BINARY" < "$IN" > "$ACTUAL_OUT" 2> "$tmp_err" || rc=$?
+        $STATIC "$BINARY" < "$IN" > "$ACTUAL_OUT" 2> "$tmp_err" || rc=$?
         cat "$tmp_err" >&2
         awk '/maximum resident set size/ {printf "运行峰值内存: %.2f MB\n", $1/1024/1024}' "$tmp_err"
         rm -f "$tmp_err"

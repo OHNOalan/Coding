@@ -1,4 +1,8 @@
 
+# run.sh's build output: binaries, .dSYM bundles, result.txt — everything
+# it produces lives here now, nothing spills into the repo root anymore.
+.build/
+
 bin/*
 lib/*
 *.dSYM/*
@@ -11,8 +15,10 @@ main_*
 main2
 std
 std_*
-# the patterns above only target run.sh's bare-name scratch binaries
-# (./main, ./main_fast, ./std, ...) - keep real source files tracked
+# the patterns above are a leftover safety net from before run.sh's output
+# moved into .build/ — they now mainly guard against other tools (e.g. the
+# VSCode/Cursor build task in .vscode/tasks.json) still dropping a bare
+# ./main or ./std binary at the repo root. Keep real source files tracked
 # regardless of a main*/std* prefix (main2.cpp, main.py, std.cpp, ...).
 !*.cpp
 !*.c
