@@ -9,10 +9,14 @@
   永远看不见改动。云端只留一份极简占位符;这个状态是本地的,不会随 clone 同步,换机器
   跑一次 `./bootstrap.sh` 就会重新设置好(顺带把 pre-commit 钩子也接上,见下文)。
 - `template/` —— 算法模板(DSU、线段树、Fenwick、Treap、Dinic、Modint 等),直接复制进 `main.cpp` 用。
-- `history/` —— 按比赛/题号归档的历史提交(`cf2249A.cpp`、`Bround3D.cpp` 之类)。
+- `history/` —— 按平台归档的历史提交,文件名保留原平台前缀(`cf2249A.cpp`、`abc466G.cpp` 之类):
+  - `history/codeforces/` —— Codeforces 正式排名赛(Div/Edu Round 等)。
+  - `history/atcoder/` —— AtCoder。
+  - `history/gym/` —— 朋友私建的 Codeforces Gym/VP 赛题(`Bround*`=Baozii Round、`Zround*`=
+    Zrnstsr Round、`bcup*`=Baozii Cup),不是正式排名赛。
+  - `history/dmoj/` —— DMOJ。
+- `systems/` —— C++/Linux 系统编程实验(并发原语、分布式实验、UDP/CIDR 网络实验等),不是竞赛代码。
 - `comm_test/` —— 双程序交互题(run-twice / communication problem)本地测试工具,见下文。
-- 根目录其余零散 `.cpp`/`.h` —— C++/Linux 系统编程实验(并发原语、MPI 分布式实验、UDP/CIDR
-  网络实验、binary patching 笔记等),不是竞赛代码。
 
 ## 首次 clone
 
