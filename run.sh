@@ -45,6 +45,9 @@ print_usage() {
   LLVM=1         编译器换成 Homebrew 装的独立 LLVM（绝对路径，不依赖 PATH）。
                  默认走 xcrun，跟随 xcode-select 选中的 Xcode 工具链；只有
                  Apple clang 自己又出问题时才需要这个应急开关。
+  VERBOSE=1      \`time -l\` 的完整原始输出（page faults/context switches/
+                 instructions retired/... 一大堆）。默认只留 real/user/sys
+                 三个耗时 + 最后提炼的一行峰值内存 MB，这堆平时不看。
 
   ACTUAL_OUT           程序实际输出存去哪个文件          默认: .build/result.txt
   ASAN_OPTIONS         SAN=1 时生效，可覆盖默认值 detect_leaks=0:symbolize=1
@@ -182,11 +185,31 @@ setup_sanitizer_env() {
     fi
 }
 
+# time -l 除了 real/user/sys 那行和 maximum resident set size 之外剩下的一堆
+# （page faults/context switches/instructions retired/cycles elapsed/...），
+# 平时刷题基本不看——默认过滤掉，VERBOSE=1 时原样全部显示。
+TIME_NOISE_PATTERN='^[[:space:]]*[0-9]+[[:space:]]+(average (shared memory|unshared data|unshared stack) size|page reclaims|page faults|swaps|block (input|output) operations|messages (sent|received)|signals received|(voluntary|involuntary) context switches|instructions retired|cycles elapsed|peak memory footprint|maximum resident set size)[[:space:]]*$'
+
+# 输出 time -l 的耗时/内存信息：默认只留 real/user/sys 那行（如果有编译器/程序
+# 自己的诊断输出也一并放出来）+ 下面 awk 提炼出的一行峰值内存 MB；VERBOSE=1
+# 时改成把 tmp_err 原样全部倒出来，不做任何过滤。
+show_time_output() {
+    local tmp_err="$1" label="$2"
+    if [ -n "${VERBOSE:-}" ]; then
+        cat "$tmp_err" >&2
+    else
+        # 全部行都被判定为噪音时 grep -Ev 不会有任何输出、退出码是 1——
+        # set -e 之下会直接把脚本带崩，用 `|| true` 兜住。
+        grep -Ev "$TIME_NOISE_PATTERN" "$tmp_err" >&2 || true
+    fi
+    awk -v label="$label" '/maximum resident set size/ {printf "%s峰值内存: %.2f MB\n", label, $1/1024/1024}' "$tmp_err"
+}
+
 # ---------- 阶段 6a：编译 ----------
-# 用临时文件收集 stderr，跑完统一 cat + awk，不用 `2> >(...)` 进程替换——
-# 那种写法会派生一个不跟脚本主进程生命周期绑定的后台子进程，`set -e` 提前
-# 结束脚本时它可能还没退出、还占着 stderr 管道的写端，让只认"管道 EOF"的
-# 外部工具（IDE 运行面板/CI 日志采集）误判还在跑。
+# 用临时文件收集 stderr，跑完统一处理，不用 `2> >(...)` 进程替换——那种写法
+# 会派生一个不跟脚本主进程生命周期绑定的后台子进程，`set -e` 提前结束脚本时
+# 它可能还没退出、还占着 stderr 管道的写端，让只认"管道 EOF"的外部工具
+# （IDE 运行面板/CI 日志采集）误判还在跑。
 compile() {
     local tmp_err rc=0
     tmp_err="$(mktemp)"
@@ -201,8 +224,7 @@ compile() {
         fi
         $STATIC $COMPILER $CPPFLAGS_STDCXX_H $STD_CPP -O0 $DEBUG_INFO $FRAME_POINTER $SANITIZER "$FILENAME" -o "$BINARY" 2> "$tmp_err" || rc=$?
     fi
-    cat "$tmp_err" >&2
-    awk '/maximum resident set size/ {printf "编译峰值内存: %.2f MB\n", $1/1024/1024}' "$tmp_err"
+    show_time_output "$tmp_err" "编译"
     rm -f "$tmp_err"
     return "$rc"
 }
@@ -221,15 +243,20 @@ run_bin() {
         else
             echo ">>> 提示: 无 ${IN}，直接运行..."
         fi
-        $STATIC "$BINARY" || rc=$?
+        # 只重定向 stderr 去过滤 time -l 的输出，stdin/stdout 照常直连终端，
+        # 不影响交互式输入输出。
+        local tmp_err
+        tmp_err="$(mktemp)"
+        $STATIC "$BINARY" 2> "$tmp_err" || rc=$?
+        show_time_output "$tmp_err" "运行"
+        rm -f "$tmp_err"
         echo "退出码: $rc"
     else
         echo ">>> 输入: $IN"
         local tmp_err
         tmp_err="$(mktemp)"
         $STATIC "$BINARY" < "$IN" > "$ACTUAL_OUT" 2> "$tmp_err" || rc=$?
-        cat "$tmp_err" >&2
-        awk '/maximum resident set size/ {printf "运行峰值内存: %.2f MB\n", $1/1024/1024}' "$tmp_err"
+        show_time_output "$tmp_err" "运行"
         rm -f "$tmp_err"
 
         echo ">>> 程序输出已保存: $ACTUAL_OUT"
